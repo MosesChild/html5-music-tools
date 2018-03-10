@@ -1,0 +1,37 @@
+body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    width: 100vw;
+ }
+ .key[data-pressed="yes"]{
+     background: "#AAAAAA";
+ }
+
+ #keyboardWrapper {
+    left: 5vw;
+    width: 100vw;
+    height: 20vh;
+ }
+ #sequencer {
+     width: 100vw;
+     height: 20vh;
+     display: flex;
+     box-shadow: 1px 1px black;
+ }
+ .division {
+    flex: 1;
+    box-shadow: 1px 1px black;
+ }
+ .division[data-on=true]{
+    background-color: purple;
+ }
+ .on {
+     background-color: yellow;
+ }
+ #quarterPulse {
+     float:right;
+     width: 5vw;
+     height: 5vh;
+
+ }
