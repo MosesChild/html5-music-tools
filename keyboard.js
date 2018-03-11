@@ -27,12 +27,15 @@ var makeFreqTable = function(cents){// ready for tuning!
    };
    return table;
 }
-function showKeyDown(className){
-   var these=document.getElementsByClassName(className);   
+function showKeyDown(target){
+   var selector=`div[data-id="${target.dataset.id}"]`;
+   var these=target.parentNode.querySelectorAll(selector); 
+   console.log("showKeyDown", these)
    for (both of these){ both.style.background="#AAAAAA"}
 }
-function showKeyUp(className){
-   var these=document.getElementsByClassName(className);
+function showKeyUp(target){
+      var selector=`div[data-id="${target.dataset.id}"]`;
+      var these=target.parentNode.querySelectorAll(selector); 
    for (both of these){ 
       let id=both.dataset.id;
       id==1 || id==3 || id==6 || id==8 || id==10 ? both.style.background="black" 
@@ -47,7 +50,7 @@ function notePressed(target) {
    let dataset=target.dataset
       if (!dataset["pressed"]) {
          dataset["pressed"] = "yes";
-         showKeyDown(target.className);
+         showKeyDown(target);
          try {playNote(target);}
          catch(e){}
    }       
@@ -62,14 +65,15 @@ function noteReleased(target) {
       try {releaseNote(target);}
       catch(e){}
       delete dataset["pressed"];     
-   showKeyUp(target.className);
+   showKeyUp(target);
 }
 
 var makeNote=function(id,octaveNumber){
    var note=document.createElement('div');
    note.style.float = "left";
    note.style.boxShadow="inset -1px 0px black";
-   note.classList.add(notes.sharpScale[id]+""+octaveNumber)
+   note.classList.add("key");
+   note.dataset.midinote=notes.sharpScale[id]+""+octaveNumber;
    note.dataset.id=id;
    note.dataset.octave=octaveNumber;
    note.dataset.frequency = freqTable[(octaveNumber*12+id)];

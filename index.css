@@ -7,27 +7,29 @@ body {
  .key[data-pressed="yes"]{
      background: "#AAAAAA";
  }
-
  #keyboardWrapper {
     left: 5vw;
     width: 100vw;
     height: 20vh;
  }
- #sequencer {
+ .sequencer {
      width: 100vw;
      height: 20vh;
      display: flex;
      box-shadow: 1px 1px black;
  }
- .division {
+ .step {
     flex: 1;
     box-shadow: 1px 1px black;
  }
- .division[data-on=true]{
+ .step[data-on=true]{
     background-color: purple;
  }
  .on {
      background-color: yellow;
+ }
+ .active{
+    box-shadow: inset 0 0 0 3px  blue;
  }
  #quarterPulse {
      float:right;
