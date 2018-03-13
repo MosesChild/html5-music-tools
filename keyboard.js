@@ -10,6 +10,7 @@ const nthroot = function(x,n) {
    //if x is negative function returns NaN
    return Math.exp((1/n)*Math.log(x));
 }
+const selectWholeKey = midinote => document.querySelectorAll(`.key[data-midinote=${midinote}]`);
 
 var makeFreqTable = function(cents){// ready for tuning!
    var prevValue=27.5;
@@ -27,72 +28,48 @@ var makeFreqTable = function(cents){// ready for tuning!
    };
    return table;
 }
-function showKeyDown(target){
-   var selector=`div[data-id="${target.dataset.id}"]`;
-   var these=target.parentNode.querySelectorAll(selector); 
-   console.log("showKeyDown", these)
-   for (both of these){ both.style.background="#AAAAAA"}
-}
-function showKeyUp(target){
-      var selector=`div[data-id="${target.dataset.id}"]`;
-      var these=target.parentNode.querySelectorAll(selector); 
-   for (both of these){ 
-      let id=both.dataset.id;
-      id==1 || id==3 || id==6 || id==8 || id==10 ? both.style.background="black" 
-      : both.style.background="white"}   
-}
+
 function mousePressed(event){
    if (event.buttons & 1) {
       notePressed(event.target);
    }
 }
-function notePressed(target) {  
-   let dataset=target.dataset
-      if (!dataset["pressed"]) {
-         dataset["pressed"] = "yes";
-         showKeyDown(target);
-         try {playNote(target);}
-         catch(e){}
-   }       
-}
-function mouseReleased(event) { 
+function mouseReleased(event) {
    noteReleased(event.target)
 }
-function noteReleased(target) {
-    
-    let dataset = target.dataset;
- //  if (dataset && dataset["pressed"]) {
-      try {releaseNote(target);}
-      catch(e){}
-      delete dataset["pressed"];     
-   showKeyUp(target);
+
+function notePressed(target) {
+   selectWholeKey ( target.dataset.midinote )
+   .forEach(part=>part.className+=" pressed");
 }
 
-var makeNote=function(id,octaveNumber){
-   var note=document.createElement('div');
-   note.style.float = "left";
-   note.style.boxShadow="inset -1px 0px black";
-   note.classList.add("key");
-   note.dataset.midinote=notes.sharpScale[id]+""+octaveNumber;
-   note.dataset.id=id;
-   note.dataset.octave=octaveNumber;
-   note.dataset.frequency = freqTable[(octaveNumber*12+id)];
+function noteReleased(target) {
+      selectWholeKey ( target.dataset.midinote )
+      .forEach(part=>
+            part.classList.remove("pressed")); 
+}
 
-   note.addEventListener("mousedown", mousePressed, false);
-   note.addEventListener("mouseup", mouseReleased, false);
-   note.addEventListener("mouseover", mousePressed, false);
-   note.addEventListener("mouseleave", mouseReleased, false);
-   return note;
+var makeKey=function(id,octaveNumber){
+   var key=document.createElement('div');
+   key.className="key";
+   key.dataset.midinote=notes.sharpScale[id]+""+octaveNumber;
+   key.dataset.id=id;
+   key.dataset.octave=octaveNumber;
+   key.dataset.frequency = freqTable[(octaveNumber*12+id)];
+
+   key.addEventListener("mousedown", mousePressed, false);
+   key.addEventListener("mouseup", mouseReleased, false);
+   key.addEventListener("mouseover", mousePressed, false);
+   key.addEventListener("mouseleave", mouseReleased, false);
+   return key;
 }
 
 var makeStems=function(id, octaveNumber){
-      var note=makeNote(id,octaveNumber);
-      note.style.background = "white";
-      note.style.width="8.33%";
-      note.style.height="60%";
+      var note=makeKey(id,octaveNumber);
+      note.className+=" stem";
    if (id==1 || id==3 || id==6 || id==8 || id==10) {
-         note.style.background="black";
-      } 
+         note.className+=" black";
+      }
       if (id>0 && id<=4){
          note.style.width="8.63%"
       } else if (id>7 && id<=11){
@@ -101,10 +78,7 @@ var makeStems=function(id, octaveNumber){
    return note;
 }
 var makeWhiteKeys = function(id,octaveNumber){
-   var note=makeNote(id,octaveNumber);
-   note.style.background="white";
-   note.style.height="40%";
-   note.style.width="14.2857%";
+   var note=makeKey(id,octaveNumber);
    return note;
 }
 
@@ -113,8 +87,6 @@ function makeOctave(width, octaveNumber=4){
    var octave=document.createElement('div');
    octave.className="octave";
    octave.style.width=width;
-   octave.style.float="left";
-   octave.style.height="100%";
    for (var i=0; i<12; i++){
       var note=makeStems(i, octaveNumber);
       octave.append(note);
@@ -155,22 +127,18 @@ var makeKeyboard=function(octaves, domID, octaveStart){
    // first setup keyboard div...
    var keyboard=document.createElement('div');
    keyboard.className='keyboard';
-   keyboard.style.width="100%";
-   keyboard.style.height="100%";
-   keyboard.style.borderBottom="1px solid black";
-   keyboard.style.borderLeft="1px solid black";
- 
+
    // add octaves... 
    for (var count=octaveStart; count<octaveEnd; count++){
       var octave=makeOctave(octavePercent+'%',count);
       keyboard.append(octave);
    }       
    // and add the top note (upper 'C');
-   var topNote=makeNote(0,octaveEnd);
-   topNote.style.width=notePercent+"%";
-   topNote.style.height="100%";
-   topNote.style.background="white";
-   keyboard.append(topNote); 
+   var topKey=makeKey(0,octaveEnd);
+   topKey.style.width=notePercent+"%";
+   topKey.style.height="100%"
+
+   keyboard.append(topKey); 
    
    // add eventlisteners
    addTypeListener(keyboard);

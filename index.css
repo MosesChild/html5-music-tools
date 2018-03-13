@@ -4,9 +4,38 @@ body {
     height: 100%;
     width: 100vw;
  }
- .key[data-pressed="yes"]{
-     background: "#AAAAAA";
+.keyboard{
+    width: 100%;
+    height: 100%;
+    border-left: 1px solid black;
+    border-bottom:1px solid black;
+}
+.octave{
+    float:left;
+    height: 100%;
+}
+.key{
+    float: left;
+    height: 40%; /*.stem over-ride*/
+    width: 14.2857%; /*.stem over-ride*/
+    background: white; /* .black over-ride  */ 
+    box-shadow: inset -1px 0px black;
+}
+
+.key.active{
+    background: #800080;
+}
+.key.pressed{
+    background-color: #AAAAAA;
+}
+ .stem {
+    width: 8.33%;
+    height: 60%;
  }
+ .black {
+    background-color: black;
+ }
+ 
  #keyboardWrapper {
     left: 5vw;
     width: 100vw;
@@ -20,15 +49,15 @@ body {
  }
  .step {
     flex: 1;
-    box-shadow: 1px 1px black;
+    box-shadow: inset 0 0 0 1px black;
  }
- .step[data-on=true]{
+ .step.on{
     background-color: purple;
  }
- .on {
+ .now {
      background-color: yellow;
  }
- .active{
+ .step.active{
     box-shadow: inset 0 0 0 3px  blue;
  }
  #quarterPulse {
