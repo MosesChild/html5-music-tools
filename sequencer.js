@@ -171,7 +171,7 @@ const sequencer = {
     if (!sequencer.play) {
       
       sequencer.play = setInterval(() => {
-        var releaseKeys=document.getElementsByClassName("pressed");
+        
         const oldCursor=document.querySelectorAll(".now");
         const lastStep = document.getElementById("step" + sequencer.step);
         const currentStep = sequencer.seqNotes[sequencer.step];
@@ -180,6 +180,8 @@ const sequencer = {
         if (oldCursor){
           oldCursor.forEach(cursor=>cursor.classList.remove("now"));
         };
+        // release last notes...
+        $(".pressed").forEach(key=>key.classList.toggle("pressed"));
         // increment step.. 
         sequencer.step = (sequencer.step + 1) % sequencer.timeValue;
         document.getElementById("step" + sequencer.step).classList.add("now");
@@ -189,13 +191,7 @@ const sequencer = {
           sequencer.quarterPulse.classList.add("now");
         } else {
           sequencer.quarterPulse.classList.remove("now");
-        }
-        // release last notes...
-        
-        console.log(releaseKeys)
-       if (releaseKeys>0){
-        releaseKeys.classList.remove("pressed");
-       }
+        };
         // if step is 'on'... trigger current notes...       
         if (currentStep.dataset.triggerList) {
           triggerNotes(currentStep);
