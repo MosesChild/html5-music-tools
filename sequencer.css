@@ -1,0 +1,25 @@
+.sequencer {
+    width: 100vw;
+    height: 20vh;
+    display: flex;
+    box-shadow: 1px 1px black;
+}
+.step {
+   flex: 1;
+   box-shadow: inset 0 0 0 1px black;
+}
+.step.on{
+   background-color: purple;
+}
+.now {
+    background-color: yellow;
+}
+.step.active{
+   box-shadow: inset 0 0 0 3px  blue;
+}
+#click {
+    float:right;
+    width: 5vw;
+    height: 5vh;
+
+}

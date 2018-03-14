@@ -1,25 +1,38 @@
 
-
-
 var currentSample;
-var audioContext = new AudioContext();
-var analyser = audioContext.createAnalyser();
+var audioContext = audioContext ? audioContext : new AudioContext;
+//var analyser = audioContext.createAnalyser();
 var source;
 var monitor = document.createElement("div");
 document.body.appendChild(monitor);
-makeKeyboard(2, "keyboardWrapper", 1);
-/*
-const createSamplerTransportPanel = () => {
+//makeKeyboard(2, "keyboardWrapper", 1);
+/* Requirements :
+instance 'id'.
+local object 'currentSample'
+    */
+
+const createSamplerInstance = () => {
   const panel = document.createElement("p");
-  panel.innerHTML =
-    '<button id="startRecord">' +
-    '<i class="material-icons" style="color:red">' +
-    "fiber_manual_record</i></button>" +
-    '<button id="stopRecord" disabled>';
-  '<i class="material-icons" style="color:black">stop</i>' + "</button>";
+  buttons=[["startRecord", "fiber_manual_record"],["stopRecord","stop"],
+    ["play","play_arrow"],["audioDownload","file_download"]];
+  buttons.forEach(button=>{
+      let btn=document.createElement("button");
+      let icon=document.createElement("i");
+      btn.id=button[0];
+      icon.textContent=button[1];
+      icon.className="material-icons";
+      btn.appendChild(icon);
+      panel.appendChild(btn);
+  });
+  let audio=document.createElement("audio");
+  audio.id="recordedAudio";
+  panel.appendChild(audio);
+  document.body.appendChild(panel);
+  document.getElementById("audioDownload").style.opacity=0;
 };
 
-*/
+createSamplerInstance();
+
 navigator.mediaDevices
   .getUserMedia({ audio: true })
   .then(stream => {
@@ -41,12 +54,14 @@ navigator.mediaDevices
 
         audioDownload.href = recordedAudio.src;
         audioDownload.download = "mp3";
-        audioDownload.innerHTML = "download";
+        audioDownload.style.opacity=1;
       } else {
       }
     };
   })
   .catch(e => console.log(e));
+
+window.onload = () => {
 
 startRecord.onclick = e => {
   startRecord.disabled = true;
@@ -62,10 +77,11 @@ stopRecord.onclick = e => {
   rec.stop();
   source.disconnect(analyser);
 };
-play.onclick = () => {
+play.onclick = e => {
   voice();
 };
 
+}
 const keyboardConvertObj = (noteElement) => {
   const note = noteElement.dataset.id;
   const octave = noteElement.dataset.octave;
@@ -116,51 +132,3 @@ function bufferSound(ctx, url) {
   });
   return p;
 }
-
-analyser.fftSize = 2048;
-var bufferLength = analyser.frequencyBinCount;
-var dataArray = new Uint8Array(bufferLength);
-analyser.getByteTimeDomainData(dataArray);
-
-// Get a canvas defined with ID "oscilloscope"
-var canvas = document.getElementById("oscilloscope");
-var canvasCtx = canvas.getContext("2d");
-
-// draw an oscilloscope of the current audio source
-
-function draw() {
-  drawVisual = requestAnimationFrame(draw);
-
-  analyser.getByteTimeDomainData(dataArray);
-
-  canvasCtx.fillStyle = "rgb(200, 200, 200)";
-  canvasCtx.fillRect(0, 0, canvas.width, canvas.height);
-
-  canvasCtx.lineWidth = 2;
-  canvasCtx.strokeStyle = "rgb(0, 0, 0)";
-
-  canvasCtx.beginPath();
-
-  var sliceWidth = canvas.width * 1.0 / bufferLength;
-  var x = 0;
-
-  for (var i = 0; i < bufferLength; i++) {
-    var v = dataArray[i] / 128.0;
-    var y = v * canvas.height / 2;
-
-    if (i === 0) {
-      canvasCtx.moveTo(x, y);
-    } else {
-      canvasCtx.lineTo(x, y);
-    }
-
-    x += sliceWidth;
-  }
-
-  canvasCtx.lineTo(canvas.width, canvas.height / 2);
-  canvasCtx.stroke();
-}
-
-draw();
-
-/*  Following code for audio context thanks to https://codepen.io/qur2/pen/emVQwW */
