@@ -1,0 +1,39 @@
+body {
+    margin: 0;
+}
+#keyboardWrapper {
+    width: 100vw;
+    height: 20vh;
+ }
+.keyboard{
+    width: 100%;
+    height: 100%;
+    box-shadow: inset -1px 0px black;
+    border-bottom:1px solid black;
+}
+.octave{
+    float:left;
+    height: 100%;
+}
+.key{
+    float: left;
+    height: 40%; /*.stem over-ride*/
+    width: 14.2857%; /*.stem over-ride*/
+    background: white; /* .black over-ride  */ 
+    box-shadow: inset -1px 0px black;
+}
+
+.key.active{
+    background: #800080;
+}
+.key.pressed{
+    background-color: #AAAAAA;
+}
+ .stem {
+    width: 8.33%;
+    height: 60%;
+ }
+ .black {
+    background-color: black;
+ }
+ 

@@ -1,107 +1,121 @@
 
+
+
 var currentSample;
 var audioContext = new AudioContext();
 var analyser = audioContext.createAnalyser();
 var source;
-var monitor=document.createElement('div');
-var keyboardWrapper=document.getElementById('keyboardWrapper');
-keyboardWrapper.style.height="20vh"
+var monitor = document.createElement("div");
+document.body.appendChild(monitor);
+makeKeyboard(2, "keyboardWrapper", 1);
+/*
+const createSamplerTransportPanel = () => {
+  const panel = document.createElement("p");
+  panel.innerHTML =
+    '<button id="startRecord">' +
+    '<i class="material-icons" style="color:red">' +
+    "fiber_manual_record</i></button>" +
+    '<button id="stopRecord" disabled>';
+  '<i class="material-icons" style="color:black">stop</i>' + "</button>";
+};
 
-var keyboard=makeKeyboard(2,"keyBoard");
-console.log(document, keyboard)
-keyboard.addEventListener("keyDown", function( event ) {
-   var t=event.target;
-   console.log(t);
-}, false);
-keyboardWrapper.appendChild(keyboard);
+*/
+navigator.mediaDevices
+  .getUserMedia({ audio: true })
+  .then(stream => {
+    rec = new MediaRecorder(stream);
+    source = audioContext.createMediaStreamSource(stream);
 
-monitor.id='monitor';
+    //source.connect(audioContext.destination);
 
-keyboardWrapper.appendChild(monitor);
-
-
-
-navigator.mediaDevices.getUserMedia({audio:true})
-	.then(stream => {
-		rec = new MediaRecorder(stream);
-      source = audioContext.createMediaStreamSource(stream);
-      
-   //source.connect(audioContext.destination);
-
-		rec.ondataavailable = e => {
-			audioChunks.push(e.data);
-			if (rec.state == "inactive"){
-        let blob = new Blob(audioChunks,{type:'audio/x-mpeg-3'});
+    rec.ondataavailable = e => {
+      audioChunks.push(e.data);
+      if (rec.state == "inactive") {
+        let blob = new Blob(audioChunks, { type: "audio/x-mpeg-3" });
         recordedAudio.src = URL.createObjectURL(blob);
 
-        recordedAudio.playbackRate = 1;  
-        currentSample=recordedAudio.src
-            console.log("recordedAudio",recordedAudio)  ;  
-            recordedAudio.autoplay=false;
+        recordedAudio.playbackRate = 1;
+        currentSample = recordedAudio.src;
+        console.log("recordedAudio", recordedAudio);
+        recordedAudio.autoplay = false;
 
         audioDownload.href = recordedAudio.src;
-        audioDownload.download = 'mp3';
-        audioDownload.innerHTML = 'download';
-     } else{
-      
-     }
-		}
-	})
-	.catch(e=>console.log(e));
-  
+        audioDownload.download = "mp3";
+        audioDownload.innerHTML = "download";
+      } else {
+      }
+    };
+  })
+  .catch(e => console.log(e));
+
 startRecord.onclick = e => {
   startRecord.disabled = true;
-  stopRecord.disabled=false;
+  stopRecord.disabled = false;
   source.connect(analyser);
   audioChunks = [];
   rec.start();
-}
+};
 
 stopRecord.onclick = e => {
-   startRecord.disabled = false;
-   stopRecord.disabled=true;
-   rec.stop();
-   source.disconnect(analyser);
-}
+  startRecord.disabled = false;
+  stopRecord.disabled = true;
+  rec.stop();
+  source.disconnect(analyser);
+};
+play.onclick = () => {
+  voice();
+};
 
-var playNote=function(noteElement){ // either noteElement or className
-    if (typeof noteElement==="string"){
-        noteElement=document.getElementsByClassName(noteElement)[0];
-    }
-   let note=noteElement.dataset.id;
-   let octave=noteElement.dataset.octave;
-   console.log("playNote", octave,note );
-   if (currentSample){
+const keyboardConvertObj = (noteElement) => {
+  const note = noteElement.dataset.id;
+  const octave = noteElement.dataset.octave;
+  console.log("playNote", octave, note);
+  //assume octave 4 with two octave range... middle C is original pitch...;
+  // so create cents value and scale
+  const cents = (octave-2) * 1200 + note * 100; // assumes octave 4 is below pitch...
+  return cents;
+};
 
-         //assume octave 4 with two octave range... middle C is original pitch...
-      var cents=(octave-5)*1200+note*100;// assumes octave 4 is below pitch...
-      console.log("cents",cents)
-   bufferSound(audioContext, currentSample).then(function (buffer) {
+const voice = (adjustmentFunction) => {
+  // pre requisites:
+  // assign an audio-clip to this event...
+  // if available...
+  if (currentSample) {
+    bufferSound(audioContext, currentSample).then(function(buffer) {
       var src = audioContext.createBufferSource();
-      var newValue= ((cents)/600);
-      src.detune.setValueAtTime(cents, 0); 
-      // console.log("src.playbackRate", newValue, "buffer", buffer)
+      if (adjustmentFunction) {
+        adjustmentFunction(src);
+      }
+      // console.log( "buffer", buffer)
       src.buffer = buffer;
       src.connect(analyser);
       src.connect(audioContext.destination);
       src.start();
-   });
+    });
+  }
+};
+const playNote = function (noteElement){
+ const cents=keyboardConvertObj(noteElement);
+ callback= (src)=>src.detune.setValueAtTime(cents, 0);
+ voice(callback);
 }
-}
+/* playNote will playback piano keyboard DOM nodes...  Ultimately it is using
+the dataset.octave and dataset.id (a value 0-11 that represents "C" to "B");
+a C value for original source is currently assumed.
 
+*/
 function bufferSound(ctx, url) {
   var p = new Promise(function(resolve, reject) {
     var req = new XMLHttpRequest();
-    req.open('GET', url, true);
-    req.responseType = 'arraybuffer';
+    req.open("GET", url, true);
+    req.responseType = "arraybuffer";
     req.onload = function() {
       ctx.decodeAudioData(req.response, resolve, reject);
-    }
+    };
     req.send();
   });
   return p;
 }
-
 
 analyser.fftSize = 2048;
 var bufferLength = analyser.frequencyBinCount;
@@ -115,16 +129,15 @@ var canvasCtx = canvas.getContext("2d");
 // draw an oscilloscope of the current audio source
 
 function draw() {
-
   drawVisual = requestAnimationFrame(draw);
 
   analyser.getByteTimeDomainData(dataArray);
 
-  canvasCtx.fillStyle = 'rgb(200, 200, 200)';
+  canvasCtx.fillStyle = "rgb(200, 200, 200)";
   canvasCtx.fillRect(0, 0, canvas.width, canvas.height);
 
   canvasCtx.lineWidth = 2;
-  canvasCtx.strokeStyle = 'rgb(0, 0, 0)';
+  canvasCtx.strokeStyle = "rgb(0, 0, 0)";
 
   canvasCtx.beginPath();
 
@@ -132,7 +145,6 @@ function draw() {
   var x = 0;
 
   for (var i = 0; i < bufferLength; i++) {
-
     var v = dataArray[i] / 128.0;
     var y = v * canvas.height / 2;
 
@@ -147,27 +159,8 @@ function draw() {
 
   canvasCtx.lineTo(canvas.width, canvas.height / 2);
   canvasCtx.stroke();
-};
+}
 
 draw();
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 /*  Following code for audio context thanks to https://codepen.io/qur2/pen/emVQwW */
-
-
-

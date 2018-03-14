@@ -12,7 +12,7 @@ const nthroot = function(x,n) {
 }
 const selectWholeKey = midinote => document.querySelectorAll(`.key[data-midinote=${midinote}]`);
 
-var makeFreqTable = function(cents){// ready for tuning!
+const makeFreqTable = (cents)=>{// ready for tuning!
    var prevValue=27.5;
    var root2=nthroot(2,12);
    var cent=nthroot(2,1200);
@@ -41,6 +41,7 @@ function mouseReleased(event) {
 function notePressed(target) {
    selectWholeKey ( target.dataset.midinote )
    .forEach(part=>part.className+=" pressed");
+   playNote(target);
 }
 
 function noteReleased(target) {
@@ -83,7 +84,7 @@ var makeWhiteKeys = function(id,octaveNumber){
 }
 
 function makeOctave(width, octaveNumber=4){
-   // make a container to hold all keys and style it...
+   // wraps one octave of keys and style it...
    var octave=document.createElement('div');
    octave.className="octave";
    octave.style.width=width;
@@ -101,7 +102,7 @@ function makeOctave(width, octaveNumber=4){
 var octaveStart;
 var freqTable;
 
-var makeKeyboard=function(octaves, domID, octaveStart){
+var makeKeyboard=function(octaves=2, domID, octaveStart){
    freqTable=makeFreqTable();
    var w,octaveStart, octaveEnd, target;
    if (octaveStart==undefined){
@@ -109,17 +110,19 @@ var makeKeyboard=function(octaves, domID, octaveStart){
    }
    octaveEnd=octaveStart+octaves;
    
-   if (domID==undefined){
+   if (!domID){
       w = window.innerWidth;
-      var container=document.createElement('div');
-      container.style.width=w+"px";
-      container.style.height="10em";
-      container.id="container";
-      //document.body.append(container);
-      target=container;
+      h = window.innerWidth
+      var keyboardWrapper=document.createElement('div');
+      /*
+      keyboardWrapper.style.width=w+"px";
+      keyboardWrapper.style.height="100px";*/
+      keyboardWrapper.id="keyboardWrapper";
+      document.body.append(keyboardWrapper);
+      target=keyboardWrapper;
+      console.log("making default keyboardWrapper");
    } else {
       target=document.getElementById(domID);
-   //   w = target.offsetWidth;
    }
    var notePercent=100/(octaves*7+1);
    var octavePercent=notePercent*7;
@@ -142,10 +145,9 @@ var makeKeyboard=function(octaves, domID, octaveStart){
    
    // add eventlisteners
    addTypeListener(keyboard);
-
-   return keyboard;
+   target.appendChild(keyboard);
+   return keyboard;// not strictly necessary...
 }
-
 
 function addTypeListener(element,octave=4){
    var keys="awsedftgyhujkol";
