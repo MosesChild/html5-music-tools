@@ -1,7 +1,8 @@
+
 const size=1;
 var octave=5;
-
-var by=document.querySelector('body');
+var octaveStart;
+var freqTable;
 
 var notes={ sharpScale: ["C","Csharp", "D","Dsharp","E","F","Fsharp","G","Gsharp","A","Asharp","B","C"],
               flatScale: ["C","Db", "D","Eb","E","F","Gb","G","Ab","A","Bb","B","C"]};
@@ -10,6 +11,8 @@ const nthroot = function(x,n) {
    //if x is negative function returns NaN
    return Math.exp((1/n)*Math.log(x));
 }
+
+
 const selectWholeKey = midinote => document.querySelectorAll(`.key[data-midinote=${midinote}]`);
 
 const makeFreqTable = (cents)=>{// ready for tuning!
@@ -99,8 +102,7 @@ function makeOctave(width, octaveNumber=4){
    }
    return octave;
 }
-var octaveStart;
-var freqTable;
+
 
 var makeKeyboard=function(octaves=2, domID, octaveStart){
    freqTable=makeFreqTable();
@@ -114,9 +116,7 @@ var makeKeyboard=function(octaves=2, domID, octaveStart){
       w = window.innerWidth;
       h = window.innerWidth
       var keyboardWrapper=document.createElement('div');
-      /*
-      keyboardWrapper.style.width=w+"px";
-      keyboardWrapper.style.height="100px";*/
+
       keyboardWrapper.id="keyboardWrapper";
       document.body.append(keyboardWrapper);
       target=keyboardWrapper;

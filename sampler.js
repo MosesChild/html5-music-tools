@@ -1,108 +1,138 @@
+var audioContext = audioContext ? audioContext : new AudioContext();
+var lastSample;;
 
-var currentSample;
-var audioContext = audioContext ? audioContext : new AudioContext;
-//var analyser = audioContext.createAnalyser();
-var source;
-var monitor = document.createElement("div");
-document.body.appendChild(monitor);
-//makeKeyboard(2, "keyboardWrapper", 1);
-/* Requirements :
-instance 'id'.
-local object 'currentSample'
-    */
+const setupMediaStreamRecorder = targetAudioElement => {
+  navigator.mediaDevices
+    .getUserMedia({ audio: true })
 
-const createSamplerInstance = () => {
-  const panel = document.createElement("p");
-  buttons=[["startRecord", "fiber_manual_record"],["stopRecord","stop"],
-    ["play","play_arrow"],["audioDownload","file_download"]];
-  buttons.forEach(button=>{
-      let btn=document.createElement("button");
-      let icon=document.createElement("i");
-      btn.id=button[0];
-      icon.textContent=button[1];
-      icon.className="material-icons";
-      btn.appendChild(icon);
-      panel.appendChild(btn);
-  });
-  let audio=document.createElement("audio");
-  audio.id="recordedAudio";
-  panel.appendChild(audio);
-  document.body.appendChild(panel);
-  document.getElementById("audioDownload").style.opacity=0;
+    .then(stream => {
+      recorder = new MediaRecorder(stream);
+      source = audioContext.createMediaStreamSource(stream);
+      //  source.connect(audioContext.destination);
+      recorder.ondataavailable = e => {
+        audioChunks.push(e.data);
+        if (recorder.state == "inactive") {
+          // console.log(targetAudioElement.parentNode)
+          let blob = new Blob(audioChunks, { type: "audio/x-mpeg-3" });
+          const sampler = targetAudioElement.parentNode;
+          targetAudioElement.src = URL.createObjectURL(blob);
+          targetAudioElement.controls = false;
+          targetAudioElement.playbackRate = 1;
+          targetAudioElement.autoplay = false;
+          saveSample(targetAudioElement);
+        }
+      };
+    })
+    .catch(e => console.log(e));
+};
+function saveSample(targetAudioElement) {
+  console.log(targetAudioElement);
+ const id=defaultInstance("sample");
+ const sampleWrapper = createElement("div", { id: id, className: "sample" });
+ const sampleTrigger= createElement("span", { textContent: id, className:"key trigger", dataOctave: "4", dataId:"0"});
+ const newSample = sampleWrapper.appendChild(targetAudioElement.cloneNode(true));
+ const playButton=sampleWrapper.appendChild(createElement("button", "playSample"))
+ playButton.onclick= e =>{
+   console.log("clicked");
+  voice(newSample.src)
 };
 
-createSamplerInstance();
+ playButton.appendChild(createElement("i", {className:"material-icons", textContent:"play_arrow"}))
+ sampleWrapper.appendChild(sampleTrigger)
+ sampleWrapper.appendChild(newSample)
+ sampleWrapper.appendChild(playButton);
 
-navigator.mediaDevices
-  .getUserMedia({ audio: true })
-  .then(stream => {
-    rec = new MediaRecorder(stream);
-    source = audioContext.createMediaStreamSource(stream);
+ lastSample = newSample; // global variable enables trigger to last sample without explicit link...
 
-    //source.connect(audioContext.destination);
-
-    rec.ondataavailable = e => {
-      audioChunks.push(e.data);
-      if (rec.state == "inactive") {
-        let blob = new Blob(audioChunks, { type: "audio/x-mpeg-3" });
-        recordedAudio.src = URL.createObjectURL(blob);
-
-        recordedAudio.playbackRate = 1;
-        currentSample = recordedAudio.src;
-        console.log("recordedAudio", recordedAudio);
-        recordedAudio.autoplay = false;
-
-        audioDownload.href = recordedAudio.src;
-        audioDownload.download = "mp3";
-        audioDownload.style.opacity=1;
-      } else {
-      }
-    };
-  })
-  .catch(e => console.log(e));
-
-window.onload = () => {
-
-startRecord.onclick = e => {
-  startRecord.disabled = true;
-  stopRecord.disabled = false;
-  source.connect(analyser);
-  audioChunks = [];
-  rec.start();
-};
-
-stopRecord.onclick = e => {
-  startRecord.disabled = false;
-  stopRecord.disabled = true;
-  rec.stop();
-  source.disconnect(analyser);
-};
-play.onclick = e => {
-  voice();
-};
-
+ targetAudioElement.parentNode.appendChild(sampleWrapper);
 }
-const keyboardConvertObj = (noteElement) => {
+
+function toggleRecord(analyser, e) { /*'bind' at sampler.init() : this='recorder' instance (mediaDevice for start/stop), 
+                                      analyser = sampler.scope.analyser for canvas visual */   
+  console.log("toggleRecord", arguments);
+  console.log("source", source, analyser);
+  function _changeIcon(icon, color, materialIconName) {
+    // console.log(arguments);
+    icon.style.color = color;
+    icon.textContent = materialIconName;
+  }
+  var icon = e.target.closest("i");
+
+  if (icon.textContent === "fiber_manual_record") {
+    source.connect(analyser);
+    audioChunks = [];
+    recorder.start();
+    _changeIcon(icon, "black", "stop");
+  } else {
+    source.disconnect(analyser);
+    recorder.stop();
+    _changeIcon(icon, "red", "fiber_manual_record");
+  }
+}
+
+var instance = 0;
+
+function makeSamplerPanel(){
+  const buttons = [["recordToggle" + instance, "fiber_manual_record"],
+  ["play" + instance, "play_arrow"]];
+  var panel = createPanel(buttons, instance);
+  panel.appendChild(createElement("audio", {id:"recordedAudio"}));
+  panel.firstChild.style.color = "red";
+  return panel;
+}
+function makeSamplerContainer(){
+  const samplerWrapper = createElement("div", { id: "sampler" + instance, className: "sampler" });
+  return samplerWrapper;
+}
+
+const makeSampler = (thisName = `sampler${instance}`) =>
+  ({
+    audioContext: audioContext,
+    samplerName: thisName,
+    scope: makeScope(audioContext),
+    panel: document.body.appendChild(makeSamplerPanel()),
+    container: document.body.appendChild(makeSamplerContainer()),
+    sampleNote: 0,
+    sampleOctave: 4,
+    
+    init() {
+      this.recordedAudio=$('#recordedAudio');
+      this.container.appendChild(this.scope.canvas);
+      voice=voice.bind(this,this.scope.analyser);
+      // should create a 'source' node on this object bound to stream...
+      const recorder = setupMediaStreamRecorder(this.recordedAudio);
+      this.toggleRecord = toggleRecord.bind(recorder, this.scope.analyser);
+      this.saveSample=saveSample.bind(this);
+      document
+        .getElementById(`recordToggle${instance}`)
+        .addEventListener("click", this.toggleRecord, false);
+      instance++;
+    }
+  }.init());
+
+
+/* a helper function to work with a keyboard... it uses dataset.octave and dataset.id (a value 0-11 that represents 
+    "C" to "B") to create a detune value (in cents).  A 'C' value is the default value of the original sample.
+*/
+const keyboardSamplerConversion = noteElement => {
   const note = noteElement.dataset.id;
   const octave = noteElement.dataset.octave;
-  console.log("playNote", octave, note);
+  const cents = (octave - 4) * 1200 + note * 100; // assumes octave 4 is below pitch...
+
+  //console.log("playNote", octave, note);
   //assume octave 4 with two octave range... middle C is original pitch...;
-  // so create cents value and scale
-  const cents = (octave-2) * 1200 + note * 100; // assumes octave 4 is below pitch...
+  // so create a default range with keyboard splitting note range both above and below...
+
   return cents;
 };
-
-const voice = (adjustmentFunction) => {
-  // pre requisites:
-  // assign an audio-clip to this event...
-  // if available...
-  if (currentSample) {
-    bufferSound(audioContext, currentSample).then(function(buffer) {
+function voice(analyser, sample, adjustmentFunction) {
+  console.log("voice",arguments);
+  if (sample) {
+    bufferSound(audioContext, sample).then(function(buffer) {
       var src = audioContext.createBufferSource();
       if (adjustmentFunction) {
         adjustmentFunction(src);
       }
-      // console.log( "buffer", buffer)
       src.buffer = buffer;
       src.connect(analyser);
       src.connect(audioContext.destination);
@@ -110,16 +140,25 @@ const voice = (adjustmentFunction) => {
     });
   }
 };
-const playNote = function (noteElement){
- const cents=keyboardConvertObj(noteElement);
- callback= (src)=>src.detune.setValueAtTime(cents, 0);
- voice(callback);
-}
-/* playNote will playback piano keyboard DOM nodes...  Ultimately it is using
-the dataset.octave and dataset.id (a value 0-11 that represents "C" to "B");
-a C value for original source is currently assumed.
+/* a generic audio-voice out. AdjustmentFunction is an optional callback (a hook) that can 
+adjust the internal playback parameters with 'src'... Currently used by playNote */
 
+/* playNote will accept piano keyboard input.  Currently triggered by sending '.key' DOM nodes...  It uses
+the keyboardSamplerConversion helper to create an appropriate detune value that can then be consumed by an 'adjustmentFunction'
+on the voice callback.
 */
+const playNote = function(noteElement, sound) {
+  const cents = keyboardSamplerConversion(noteElement);
+  callback = src => src.detune.setValueAtTime(cents, 0);
+  if (!sound) {
+    sound = lastSample.src;
+  }
+  voice(sound, callback);
+};
+
+
+
+
 function bufferSound(ctx, url) {
   var p = new Promise(function(resolve, reject) {
     var req = new XMLHttpRequest();
