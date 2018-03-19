@@ -34,14 +34,14 @@ const makeFreqTable = (cents)=>{// ready for tuning!
 
 function mousePressed(event){
    if (event.buttons & 1) {
-      notePressed(event.target);
+      keyPressed(event.target);
    }
 }
 function mouseReleased(event) {
    noteReleased(event.target)
 }
 
-function notePressed(target) {
+function keyPressed(target) {
    selectWholeKey ( target.dataset.midinote )
    .forEach(part=>part.className+=" pressed");
    playNote(target);
@@ -159,7 +159,7 @@ function addTypeListener(element,octave=4){
       if (note>11){currentOctave++; note=note-12}
       if (note>-1){
          var el = document.querySelector("div."+notes.sharpScale[note]+currentOctave);
-         notePressed(el)
+         keyPressed(el)
       }
    }, false);
    document.body.addEventListener("keyup", function( event ) {

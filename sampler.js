@@ -1,5 +1,5 @@
 var audioContext = audioContext ? audioContext : new AudioContext();
-var lastSample;;
+var lastSample;
 
 const setupMediaStreamRecorder = targetAudioElement => {
   navigator.mediaDevices
@@ -29,14 +29,23 @@ function saveSample(targetAudioElement) {
   console.log(targetAudioElement);
  const id=defaultInstance("sample");
  const sampleWrapper = createElement("div", { id: id, className: "sample" });
- const sampleTrigger= createElement("span", { textContent: id, className:"key trigger", dataOctave: "4", dataId:"0"});
+ const sampleTrigger= createElement("span", { textContent: id, className:"key"});
+ sampleTrigger.dataset.midinote="C4"
+ sampleTrigger.dataset.octave= "4"
+ sampleTrigger.dataset.id="0";
+
+ sampleTrigger.onclick=()=>{callback = boundaddKeyToActiveStepTriggerList()?
+  boundaddKeyToActiveStepTriggerList(sampleTrigger): 
+  ()=> voice(newSample.src);
+  callback();
+}
  const newSample = sampleWrapper.appendChild(targetAudioElement.cloneNode(true));
- const playButton=sampleWrapper.appendChild(createElement("button", "playSample"))
+ const playButton=sampleWrapper.appendChild(createElement("button", "playSample"));
+ 
  playButton.onclick= e =>{
    console.log("clicked");
   voice(newSample.src)
 };
-
  playButton.appendChild(createElement("i", {className:"material-icons", textContent:"play_arrow"}))
  sampleWrapper.appendChild(sampleTrigger)
  sampleWrapper.appendChild(newSample)
@@ -150,13 +159,12 @@ on the voice callback.
 const playNote = function(noteElement, sound) {
   const cents = keyboardSamplerConversion(noteElement);
   callback = src => src.detune.setValueAtTime(cents, 0);
-  if (!sound) {
-    sound = lastSample.src;
+  const currentSound= sound ? sound :
+    lastSample ? lastSample.src : null;
+  if (currentSound){
+    voice(currentSound, callback);
   }
-  voice(sound, callback);
 };
-
-
 
 
 function bufferSound(ctx, url) {

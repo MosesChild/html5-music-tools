@@ -1,20 +1,37 @@
-const makeSteps = (stepCount) => {
-  const sequencer=createElement('div',{className: "sequencer"});
+const makeSteps = stepCount => {
+  const sequencer = createElement("div", { className: "sequencer" });
   for (let i = 0; i < stepCount; i++) {
-    let step = createElement("div", {id:"step"+i, className: "step", onclick: clickSeqStep});
+    let step = createElement("div", {
+      id: "step" + i,
+      className: "step",
+      onclick: clickSeqStep
+    });
     sequencer.appendChild(step);
   }
   return sequencer;
-}
-const makeSeqPanel = (bpm) => {
-  const seqButtons = [["startSequencer",'play_arrow'],["stopSequencer","stop"]];
-  const panel=createPanel(seqButtons);
-  panel.appendChild(createElement("input",{type:"number", id: "bpm", value: bpm}));
-  panel.appendChild(createElement("div",{id: "panelClick"}))
+};
+const makeSeqPanel = bpm => {
+  const seqButtons = [
+    ["startSequencer", "play_arrow"],
+    ["stopSequencer", "stop"]
+  ];
+  const panel = createPanel(seqButtons);
+  panel.appendChild(
+    createElement("input", { type: "number", id: "bpm", value: bpm })
+  );
+  panel.appendChild(createElement("div", { id: "panelClick" }));
   return panel;
-}
+};
 
-const makeSequencer = ({instanceName=defaultInstance("sequencer"), bpm = 120, timeSigTop = 4, timeSigBottom = 4, stepsPerMeasure = 16, clickTime = 8, measures = 2 } = {}) => ({
+const makeSequencer = ({
+  instanceName = defaultInstance("sequencer"),
+  bpm = 120,
+  timeSigTop = 4,
+  timeSigBottom = 4,
+  stepsPerMeasure = 16,
+  clickTime = 8,
+  measures = 2
+} = {}) => ({
   instanceName,
   bpm,
   timeSigTop,
@@ -22,43 +39,44 @@ const makeSequencer = ({instanceName=defaultInstance("sequencer"), bpm = 120, ti
   stepsPerMeasure,
   clickTime,
   measures,
-  sequencerWindow: document.body.appendChild(makeSteps(stepsPerMeasure*measures)),
-  panel : document.body.appendChild(makeSeqPanel(bpm)),
-  steps : document.getElementsByClassName("step"),
-  startButton : document.getElementById("startSequencer"),
-  stopButton : document.getElementById("stopSequencer"),
-  bpmInput : document.getElementById("bpm"),
-  panelClick : $("#panelClick"),
+  sequencerWindow: document.body.appendChild(
+    makeSteps(stepsPerMeasure * measures)
+  ),
+  panel: document.body.appendChild(makeSeqPanel(bpm)),
+  steps: document.getElementsByClassName("step"),
+  startButton: document.getElementById("startSequencer"),
+  stopButton: document.getElementById("stopSequencer"),
+  bpmInput: document.getElementById("bpm"),
+  panelClick: $("#panelClick"),
   step: 0,
   metronome: null,
   playTimer: null,
   stepTime: null,
   init() {
-    this.stopButton.onclick = function() {
+    this.startButton.onclick = this.start.bind(this);
+    this.stopButton.onclick = this.stop.bind(this);
+    this.bpmInput.onchange = this.changeBPM.bind(this);
+  },
+  stop(){ clearInterval(this.playTimer);
+      this.playTimer = null;
+  },
+  changeBPM(e) {
+    const elapsedTime = new Date() - this.lastBeat;
+    const nextBeat =
+      this.stepTime - elapsedTime > 0 ? this.stepTime - elapsedTime : null;
+    this.bpm = e.target.value;
+    this.setTimeParameters();
+    if (this.playTimer) {
       clearInterval(this.playTimer);
       this.playTimer = null;
-    }.bind(this);
-    this.setTimeParameters();
-    this.startButton.onclick = this.start.bind(this);
-    this.bpmInput.onchange=this.changeBPM.bind(this);
+      if (nextBeat) {
+        setTimeout(this.start, nextBeat);
+      }
+      this.start();
+    }
   },
-  changeBPM(e){
-    const elapsedTime=new Date-this.lastBeat;
-    const nextBeat = this.stepTime - elapsedTime > 0 ?
-      this.stepTime - elapsedTime : null;
-    this.bpm=e.target.value;
-    this.setTimeParameters();
-      if (this.playTimer){
-        clearInterval(this.playTimer);
-        this.playTimer=null;
-        if (nextBeat){
-          setTimeout(this.start, nextBeat);
-        }
-        this.start();
-      } 
-  },
-  setTimeParameters(){
-    this.stepTime = (60 / this.bpm) / (stepsPerMeasure/timeSigBottom);
+  setTimeParameters() {
+    this.stepTime = 60 / this.bpm / (stepsPerMeasure / timeSigBottom);
   },
   start() {
     console.log("startSequencer", this.stepTime);
@@ -74,11 +92,11 @@ const makeSequencer = ({instanceName=defaultInstance("sequencer"), bpm = 120, ti
         // release last notes...
         $(".pressed").forEach(key => key.classList.remove("pressed"));
         // increment step..
-        this.step =  (this.step + 1) % (stepsPerMeasure*measures) ;
+        this.step = (this.step + 1) % (stepsPerMeasure * measures);
         document.getElementById("step" + this.step).classList.add("now");
-  
+
         // make metronome click...
-        if (this.step/this.measures === this.metronome) {
+        if (this.step / this.measures === this.metronome) {
           this.panelClick.classList.add("now");
         } else {
           this.panelClick.classList.remove("now");
@@ -87,15 +105,11 @@ const makeSequencer = ({instanceName=defaultInstance("sequencer"), bpm = 120, ti
         if (currentStep.dataset.triggerList) {
           triggerNotes(currentStep);
         }
-        this.lastBeat=new Date();
-      }, this.stepTime * 1000 );
+        this.lastBeat = new Date();
+      }, this.stepTime * 1000);
     }
   }
 });
-
-
-
-
 
 function useTriggerList(seqStep, noteCallback) {
   console.log("useTriggerList", seqStep);
@@ -120,8 +134,8 @@ function addRemoveTriggerList(note, listNotes) {
 
 function triggerNotes(seqStep) {
   console.log("triggerNotes", seqStep);
+  useTriggerList(seqStep, keyPressed);
   useTriggerList(seqStep, playNote);
-  useTriggerList(seqStep, notePressed);
 }
 
 const deactivateKeys = () => {
@@ -143,13 +157,11 @@ function updateActiveKeys(seqStep) {
   const activateKey = el => toggleKeyActive(el.dataset.midinote);
   const triggerList = seqStep.dataset.triggerList;
   deactivateKeys();
-  //if (triggerList){  no longer needed because useTriggerList ignores empty triggerList.
   useTriggerList(seqStep, activateKey);
-  //}
   console.log("updateActiveKeys");
 }
 
-function latchNoteToActiveStep(e) {
+function addKeyToActiveStepTriggerList(e) {
   // function assigns next keyboard note to currently 'active' seqStep.dataset.triggerList .
   const isKey = e.target.classList.contains("key");
   const activeKey = e.target.classList.contains("active");
@@ -166,47 +178,49 @@ function latchNoteToActiveStep(e) {
     } else {
       seqStep.dataset.triggerList = newList;
     }
-    console.log("latchNoteToActiveStep", seqStep.dataset.triggerList);
+    console.log("addKeyToActiveStepTriggerList", seqStep.dataset.triggerList);
   }
 }
 
 function clickSeqStep(e) {
-  /* when the seqStep element is clicked, behaviour :
-  adds class active (and removes previously active);
-  - if currentStep is off : on,
-  - if previousStep exists : deActivate listener/stop showing keys
-      if previousStep triggers no notes: turn previousStep Off
-  - currentStep : activate (listener + ) 
-
- 'boundlatchNoteToActiveStep' listener adds keys to 
- seqStep.dataset.triggerList'.*/
-  const seqStep = e.target;
+  /*sequencer Step (currentStep) click behaviour pseudo-code:
+if currentStep inactive
+	if old step,
+		make old step inactive
+	make currentStep active
+	if currentStep off make currentStep On
+else if on make current off
+else make current inactive
+ 'boundaddKeyToActiveStepTriggerList' listener adds keys to 
+ currentStep.dataset.triggerList'.*/
+  const currentStep = e.target;
   const keys = document.getElementsByClassName("keyboard")[0];
-  const currentStepActive = seqStep.classList.contains("active");
-  const currentStepOff = !seqStep.classList.contains("on");
-  const lastStep = seqStep.parentNode.querySelector(".active");
-  const newActiveStep = seqStep !== lastStep;
-  console.log("lastStep", lastStep);
+  const currentStepActive = currentStep.classList.contains("active");
+  const currentStepOff = !currentStep.classList.contains("on");
+  const oldStep = currentStep.parentNode.querySelector(".active");
+  const newStep = currentStep !== oldStep;
+  console.log("oldStep", oldStep);
 
-  if (currentStepOff) {
-    seqStep.className += " on";
-  }
-  if (lastStep) {
-    lastStep.classList.remove("active");
-    keys.removeEventListener("click", boundlatchNoteToActiveStep, false);
-    if (!lastStep.dataset.triggerList) {
-      lastStep.classList.remove("on");
+  if (newStep && !currentStepActive) {
+    if (oldStep) {
+      oldStep.classList.remove("active");
+      keys.removeEventListener("click", boundaddKeyToActiveStepTriggerList, false);
+      if (!oldStep.dataset.triggerList) {
+        oldStep.classList.remove("on");
+      }
     }
-  }
-  if (newActiveStep) {
-    boundlatchNoteToActiveStep = latchNoteToActiveStep.bind(seqStep);
-    keys.addEventListener("click", boundlatchNoteToActiveStep, false);
+    currentStep.className += " active";
+    boundaddKeyToActiveStepTriggerList = addKeyToActiveStepTriggerList.bind(currentStep);
+    keys.addEventListener("click", boundaddKeyToActiveStepTriggerList, false);
+    if (currentStepOff) {
+      currentStep.className += " on";
+    }
+  } else if (!currentStepOff) {
+    currentStep.classList.remove("on");
   } else {
-    keys.removeEventListener("click", boundlatchNoteToActiveStep, false);
+    currentStep.classList.remove("active");
+    keys.removeEventListener("click", boundaddKeyToActiveStepTriggerList, false);
   }
-  seqStep.classList.toggle("active");
-  updateActiveKeys(seqStep);
-  console.log("makeActive", seqStep);
+  updateActiveKeys(currentStep);
+  console.log("makeActive", currentStep);
 }
-
-
