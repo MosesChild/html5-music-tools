@@ -1,7 +1,7 @@
 const makeSteps = (stepCount) => {
   const sequencer=createElement('div',{className: "sequencer"});
   for (let i = 0; i < stepCount; i++) {
-    let step = createElement("div", {id:"step"+i, className: "step", onclick: "clickSeqStep"});
+    let step = createElement("div", {id:"step"+i, className: "step", onclick: clickSeqStep});
     sequencer.appendChild(step);
   }
   return sequencer;
