@@ -91,7 +91,7 @@ function toggleRecord(analyser, e) { /*'bind' at sampler.init() : this='recorder
 var instance = 0;
 
 function makeSamplerInterface(id){
-  const sampler = createElement("div", { id: id, className: "sampler" });
+  const sampler = createElement("div", { id: id, className: "sampler drop-element" });
   const recordButton = createMaterialIconButton(id+"_recordToggle", "fiber_manual_record");
   recordButton.className="recordToggle";
   recordButton.firstChild.classList.toggle("record");

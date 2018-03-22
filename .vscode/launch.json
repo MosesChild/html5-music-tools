@@ -13,7 +13,7 @@
             "file": "${workspaceFolder}/index.html"
         },
         {
-            "name": "Launch simpleKey.html (disable sourcemaps)",
+            "name": "Launch simpleKey.html",
             "type": "chrome",
             "request": "launch",
             "sourceMaps": false,

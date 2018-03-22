@@ -68,6 +68,7 @@ var makeKey=function(id,octaveNumber){
    return key;
 }
 
+
 var makeStems=function(id, octaveNumber){
       var note=makeKey(id,octaveNumber);
       note.className+=" stem";
@@ -83,6 +84,7 @@ var makeStems=function(id, octaveNumber){
 }
 var makeWhiteKeys = function(id,octaveNumber){
    var note=makeKey(id,octaveNumber);
+   note.classList.add("bottom");
    return note;
 }
 
@@ -102,20 +104,38 @@ function makeOctave(width, octaveNumber=4){
    }
    return octave;
 }
-
+const topPanel =(instance)=>{ 
+      const topPanel=createElement("div", {className:"topPanel"});
+      const menu=createElement("i",{className: "material-icons menu", id: instance+"_menu", textContent: "menu"});
+      const handle=createElement("i",{className: "material-icons handle", id: instance+"_handle",
+textContent: "drag_handle"});
+      /* here we can add as many attributes as necessary...
+      midiChannel
+      note,
+      attachedto,
+      transpose,
+      handle for moving...
+      ...
+      */  
+      topPanel.appendChild(menu);
+      
+      topPanel.appendChild(handle);   
+      return topPanel;
+}
 
 var makeKeyboard=function(octaves=2, domID, octaveStart){
+      const instance=defaultInstance("keyboard");
    freqTable=makeFreqTable();
    var w,octaveStart, octaveEnd, target;
    if (octaveStart==undefined){
       octaveStart=5-(Math.round(octaves/2))
    }
    octaveEnd=octaveStart+octaves;
-   
+   /*
    if (!domID){
       w = window.innerWidth;
       h = window.innerWidth
-      var keyboardWrapper=document.createElement('div',{className:"resize-drag"});
+      var keyboardWrapper=document.createElement('div');
 
       keyboardWrapper.id="keyboardWrapper";
       document.body.append(keyboardWrapper);
@@ -124,12 +144,15 @@ var makeKeyboard=function(octaves=2, domID, octaveStart){
    } else {
       target=document.getElementById(domID);
    }
+   */
    var notePercent=100/(octaves*7+1);
    var octavePercent=notePercent*7;
    
    // first setup keyboard div...
-   var keyboard=document.createElement('div');
-   keyboard.className='keyboard';
+
+   var keyboard= document.body.appendChild(createElement("div",{className:"keyboard"}));
+   keyboard.appendChild(topPanel(instance));
+
 
    // add octaves... 
    for (var count=octaveStart; count<octaveEnd; count++){
@@ -145,7 +168,6 @@ var makeKeyboard=function(octaves=2, domID, octaveStart){
    
    // add eventlisteners
    addTypeListener(keyboard);
-   target.appendChild(keyboard);
    return keyboard;// not strictly necessary...
 }
 

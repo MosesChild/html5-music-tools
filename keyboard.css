@@ -1,12 +1,31 @@
-#keyboardWrapper {
-    width: 100vw;
-    height: 20vh;
- }
+
 .keyboard{
-    width: 100%;
-    height: 100%;
+    position: relative;
+    width: 500px;
+    height: 200px;
     box-shadow: inset -1px 0px black;
-    border-bottom:1px solid black;
+    border-left: 10px solid black;
+    border-right: 10px solid black;
+    border-bottom: 2em solid black;
+    background-color: "black";
+}
+.topPanel{
+    width: 100%;
+    background: black;
+    display: flex;
+    flex-flow: row nowrap;
+    justify-content: space-between;
+    line-height: 2em;
+    height: 2em;
+    font-size: 20px;
+    color: green;
+    z-index: 10;
+}
+.handle{
+    flex: 0 0 auto; 
+}
+.menu{
+    flex: 0 0 auto;
 }
 .octave{
     float:left;
@@ -19,7 +38,10 @@
     background: white; /* .black over-ride  */ 
     box-shadow: inset -1px 0px black;
 }
-
+.key.bottom{
+    border-bottom-left-radius: 3px;
+    border-bottom-right-radius: 3px;
+}
 .key.active{
     background: #800080;
 }
