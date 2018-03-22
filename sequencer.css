@@ -1,25 +1,43 @@
 .sequencer {
-    width: 100vw;
-    height: 20vh;
-    display: flex;
-    box-shadow: 1px 1px black;
+  width: 100vw;
+  height: 20vh;
+  display: flex;
+  box-shadow: 1px 1px black;
 }
+
 .step {
-   flex: 1;
-   box-shadow: inset 0 0 0 1px black;
+  flex: 1;
+  box-shadow: inset 0 0 0 1px black;
 }
-.step.on{
-   background-color: purple;
+.step.on {
+  background-color: purple;
 }
 .now {
-    background-color: yellow;
+  background-color: yellow;
 }
-.step.active{
-   box-shadow: inset 0 0 0 3px  blue;
+.step.active {
+  box-shadow: inset 0 0 0 3px blue;
 }
-#click {
-    float:right;
-    width: 5vw;
-    height: 3vh;
+#seqPanel {
+    width: 250px;
+}
+#panelClick {
+  width: 40px;
+  margin-bottom: 3px;
+  height: 40px;
+}
 
+#bpm {
+  width: 80px;
+  font-size: 36px;
+}
+
+.timeSigWrapper {
+  width: 20px;
+  margin-right: 20px;
+}
+
+.timeSigWrapper > input[type="number"] {
+  font-size: 16px;
+  width: 30px;
 }

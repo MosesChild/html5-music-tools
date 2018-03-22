@@ -1,0 +1,24 @@
+body {
+    background-color: maroon;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    margin: 0;
+    width: 100%;
+}
+
+
+
+.panel {
+    display: flex;
+    background-color: silver;
+    margin: 10px;
+    padding: 10px 0px;
+    border-radius: 8px;
+
+}
+/* Rules for sizing the icon. */
+.material-icons.md-18 { font-size: 18px; }
+.material-icons.md-24 { font-size: 24px; }
+.material-icons.md-36 { font-size: 36px; }
+.material-icons.large { font-size: 48px; }
+
+.material-icons.record {color: red;}

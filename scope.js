@@ -1,35 +1,26 @@
-//var audioContext = audioContext ? audioContext : new AudioContext;
-
+var audioContext = audioContext ? audioContext : new AudioContext;
 
 
 //var analyser = audioContext.createAnalyser();
-const changeName=(newName)=>{this.id=newName};
-
-const makeCanvas=()=>{
-    const scopeId=document.getElementsByClassName("oscilloscope").length;
-    var canvas = document.createElement("canvas");
+const makeCanvas=(id)=>{
+    const canvas = document.getElementById(id) ? document.getElementById(id)
+    : document.body.appendChild(document.createElement("canvas"));
     canvas.className="oscilloscope";
-
-    canvas.id=scopeId;
+    canvas.id=id;
     return canvas;
 };
 
 
-
-
-var makeScope=(audioContext) =>{
-
-    const canvas=makeCanvas();
-    const context= audioContext = audioContext ? audioContext : new AudioContext;
-    const analyser=context.createAnalyser();
+const makeScope=(name) =>{
+    const id=name ? name :defaultInstance("scope");
+    const canvas=makeCanvas(instance);
+    const analyser=audioContext.createAnalyser();
     const canvasCtx= canvas.getContext("2d");
 
     var bufferLength= analyser.frequencyBinCount;
     var dataArray=new Uint8Array(bufferLength);
     function draw() {
-
         drawVisual = requestAnimationFrame(draw);
-      
         analyser.getByteTimeDomainData(dataArray);
         analyser.fftSize = 2048;
       
@@ -62,8 +53,9 @@ var makeScope=(audioContext) =>{
     draw();
 
     return {
-       canvas: canvas,
-        analyser: analyser
+        canvas: canvas,
+        analyser: analyser,
     }
+
 }
 

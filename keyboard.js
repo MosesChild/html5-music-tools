@@ -115,7 +115,7 @@ var makeKeyboard=function(octaves=2, domID, octaveStart){
    if (!domID){
       w = window.innerWidth;
       h = window.innerWidth
-      var keyboardWrapper=document.createElement('div');
+      var keyboardWrapper=document.createElement('div',{className:"resize-drag"});
 
       keyboardWrapper.id="keyboardWrapper";
       document.body.append(keyboardWrapper);

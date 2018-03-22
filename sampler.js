@@ -1,6 +1,24 @@
 var audioContext = audioContext ? audioContext : new AudioContext();
 var lastSample;
 
+
+/*
+problem : making sure that new components get added to setup properly so that function binding can occur...
+
+perhaps we need an MutationOberver to see new components...
+ or better if we call a "universal" function that handles new devices being added:
+
+when component added
+  check all other component instances
+  if ambiguous addition... 
+    alert and force user to make connection/insertion...
+  else add to current components...
+
+  requirements... 
+  every component must be able to rebind on request.
+  every component should have audioContext in and out...
+
+*/
 const setupMediaStreamRecorder = targetAudioElement => {
   navigator.mediaDevices
     .getUserMedia({ audio: true })
@@ -19,13 +37,13 @@ const setupMediaStreamRecorder = targetAudioElement => {
           targetAudioElement.controls = false;
           targetAudioElement.playbackRate = 1;
           targetAudioElement.autoplay = false;
-          saveSample(targetAudioElement);
+          makeSample(targetAudioElement);
         }
       };
     })
     .catch(e => console.log(e));
 };
-function saveSample(targetAudioElement) {
+const makeSample = (targetAudioElement) => {
   console.log(targetAudioElement);
  const id=defaultInstance("sample");
  const sampleWrapper = createElement("div", { id: id, className: "sample" });
@@ -33,18 +51,15 @@ function saveSample(targetAudioElement) {
  sampleTrigger.dataset.midinote="C4"
  sampleTrigger.dataset.octave= "4"
  sampleTrigger.dataset.id="0";
-
- sampleTrigger.onclick=()=>{callback = boundaddKeyToActiveStepTriggerList()?
-  boundaddKeyToActiveStepTriggerList(sampleTrigger): 
-  ()=> voice(newSample.src);
-  callback();
-}
  const newSample = sampleWrapper.appendChild(targetAudioElement.cloneNode(true));
- const playButton=sampleWrapper.appendChild(createElement("button", "playSample"));
+ //newSample.controls = true;
+ const playButton=sampleWrapper.appendChild(createElement("a", "playSample"));
+
+
  
  playButton.onclick= e =>{
    console.log("clicked");
-  voice(newSample.src)
+   voice(newSample.src)
 };
  playButton.appendChild(createElement("i", {className:"material-icons", textContent:"play_arrow"}))
  sampleWrapper.appendChild(sampleTrigger)
@@ -59,65 +74,54 @@ function saveSample(targetAudioElement) {
 function toggleRecord(analyser, e) { /*'bind' at sampler.init() : this='recorder' instance (mediaDevice for start/stop), 
                                       analyser = sampler.scope.analyser for canvas visual */   
   console.log("toggleRecord", arguments);
-  console.log("source", source, analyser);
-  function _changeIcon(icon, color, materialIconName) {
-    // console.log(arguments);
-    icon.style.color = color;
-    icon.textContent = materialIconName;
-  }
   var icon = e.target.closest("i");
-
+  icon.classList.toggle("record");
   if (icon.textContent === "fiber_manual_record") {
+    icon.textContent = "stop"
     source.connect(analyser);
     audioChunks = [];
     recorder.start();
-    _changeIcon(icon, "black", "stop");
   } else {
     source.disconnect(analyser);
     recorder.stop();
-    _changeIcon(icon, "red", "fiber_manual_record");
+    icon.textContent = "fiber_manual_record";
   }
 }
 
 var instance = 0;
 
-function makeSamplerPanel(){
-  const buttons = [["recordToggle" + instance, "fiber_manual_record"],
-  ["play" + instance, "play_arrow"]];
-  var panel = createPanel(buttons, instance);
-  panel.appendChild(createElement("audio", {id:"recordedAudio"}));
-  panel.firstChild.style.color = "red";
-  return panel;
-}
-function makeSamplerContainer(){
-  const samplerWrapper = createElement("div", { id: "sampler" + instance, className: "sampler" });
-  return samplerWrapper;
+function makeSamplerInterface(id){
+  const sampler = createElement("div", { id: id, className: "sampler" });
+  const recordButton = createMaterialIconButton(id+"_recordToggle", "fiber_manual_record");
+  recordButton.className="recordToggle";
+  recordButton.firstChild.classList.toggle("record");
+  sampler.appendChild(recordButton)
+  sampleList=createElement("div",{id: id+"_samples", className: "sampleList"})
+  sampleList.append(createElement("audio", { id: id+"_recordedAudio"}));
+  sampler.appendChild(sampleList);
+  return sampler;
 }
 
-const makeSampler = (thisName = `sampler${instance}`) =>
-  ({
-    audioContext: audioContext,
-    samplerName: thisName,
-    scope: makeScope(audioContext),
-    panel: document.body.appendChild(makeSamplerPanel()),
-    container: document.body.appendChild(makeSamplerContainer()),
-    sampleNote: 0,
-    sampleOctave: 4,
-    
-    init() {
-      this.recordedAudio=$('#recordedAudio');
-      this.container.appendChild(this.scope.canvas);
-      voice=voice.bind(this,this.scope.analyser);
-      // should create a 'source' node on this object bound to stream...
-      const recorder = setupMediaStreamRecorder(this.recordedAudio);
-      this.toggleRecord = toggleRecord.bind(recorder, this.scope.analyser);
-      this.saveSample=saveSample.bind(this);
-      document
-        .getElementById(`recordToggle${instance}`)
-        .addEventListener("click", this.toggleRecord, false);
-      instance++;
-    }
-  }.init());
+function makeSampler () { 
+  const id=defaultInstance("sampler");
+  const scope=makeScope(audioContext);
+  const container=document.body.appendChild(makeSamplerInterface(id));
+  const recordedAudio=$('#'+id+'_recordedAudio');
+  const recorder = setupMediaStreamRecorder(recordedAudio);
+  const boundToggleRecord=toggleRecord.bind(recorder, scope.analyser)
+  const toggleRecordButton=$("#"+id+"_recordToggle").onclick=boundToggleRecord;
+  container.appendChild(scope.canvas);
+  const sampler={
+    id,
+    audioContext,
+    container,
+    recordedAudio,
+    scope,
+  };
+  voice=voice.bind(sampler,scope.analyser);
+  //makeSample= makeSample.bind(sampler);
+    return sampler;
+  };
 
 
 /* a helper function to work with a keyboard... it uses dataset.octave and dataset.id (a value 0-11 that represents 
