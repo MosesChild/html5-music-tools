@@ -91,13 +91,18 @@ function toggleRecord(analyser, e) { /*'bind' at sampler.init() : this='recorder
 var instance = 0;
 
 function makeSamplerInterface(id){
-  const sampler = createElement("div", { id: id, className: "sampler drop-element" });
+  const sampler = createElement("div", { id: id, className: "sampler" });
   const recordButton = createMaterialIconButton(id+"_recordToggle", "fiber_manual_record");
   recordButton.className="recordToggle";
   recordButton.firstChild.classList.toggle("record");
   sampler.appendChild(recordButton)
+  const menuButton= createMaterialIconButton(id+"_menu", "menu");
+  sampler.appendChild(menuButton);
+  menuButton.className="menu";
+
   sampleList=createElement("div",{id: id+"_samples", className: "sampleList"})
   sampleList.append(createElement("audio", { id: id+"_recordedAudio"}));
+
   sampler.appendChild(sampleList);
   return sampler;
 }

@@ -30,7 +30,7 @@ const createElement = (element, attributesObj) => {
   }
   
   const createPanel = (idIconNameArray, id) => {
-    var panel = createElement("p" , { className: "panel drop-element", id: id});
+    var panel = createElement("p" , { className: "panel", id: id});
     //panelheader = panel.appendChild(createElement("i",{className: "material-icons header", textContent: "drag_handle"}))
     
     idIconNameArray.forEach(button => {

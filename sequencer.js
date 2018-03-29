@@ -127,7 +127,7 @@ const makeSequencer = ({
         }
         document.getElementById("step" + this.step).classList.add("now");
         // if step is 'on'... trigger current notes...
-        if (currentStep.dataset.triggerList) {
+        if (currentStep.classList.contains("on") && currentStep.dataset.triggerList) {
           triggerNotes(currentStep);
         }
         // record time (for smooth bpm)
@@ -231,21 +231,29 @@ else make current inactive
   if (newStep && !currentStepActive) {
     if (oldStep) {
       oldStep.classList.remove("active");
+      //old step stop responding to key presses (add/remove )
       keys.removeEventListener("click", boundaddElementToActiveStepTriggerList, false);
+      // stop showing old triggerlist
       if (!oldStep.dataset.triggerList) {
         oldStep.classList.remove("on");
       }
     }
+    // activate current step...
     currentStep.className += " active";
+
+    // add event listener...
     boundaddElementToActiveStepTriggerList = addElementToActiveStepTriggerList.bind(currentStep);
     keys.addEventListener("click", boundaddElementToActiveStepTriggerList, false);
+    // if current step currently off (+ inactive) 
     if (currentStepOff) {
       currentStep.className += " on";
     }
+    // otherwise (there was previously an active step) remove 'on'
   } else if (!currentStepOff) {
     currentStep.classList.remove("on");
-  } else {
+  } else {  
     currentStep.classList.remove("active");
+    
     keys.removeEventListener("click", boundaddElementToActiveStepTriggerList, false);
   }
   updateActiveKeys(currentStep);
