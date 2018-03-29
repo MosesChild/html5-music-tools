@@ -104,25 +104,19 @@ function makeOctave(width, octaveNumber=4){
    }
    return octave;
 }
+/*
 const topPanel =(instance)=>{ 
       const topPanel=createElement("div", {className:"topPanel"});
       const menu=createElement("i",{className: "material-icons menu", id: instance+"_menu", textContent: "menu"});
       const handle=createElement("i",{className: "material-icons handle", id: instance+"_handle",
 textContent: "drag_handle"});
-      /* here we can add as many attributes as necessary...
-      midiChannel
-      note,
-      attachedto,
-      transpose,
-      handle for moving...
-      ...
-      */  
+
       topPanel.appendChild(menu);
       
       topPanel.appendChild(handle);   
       return topPanel;
 }
-
+*/
 var makeKeyboard=function(octaves=2, domID, octaveStart){
       const instance=defaultInstance("keyboard");
    freqTable=makeFreqTable();
@@ -131,28 +125,13 @@ var makeKeyboard=function(octaves=2, domID, octaveStart){
       octaveStart=5-(Math.round(octaves/2))
    }
    octaveEnd=octaveStart+octaves;
-   /*
-   if (!domID){
-      w = window.innerWidth;
-      h = window.innerWidth
-      var keyboardWrapper=document.createElement('div');
 
-      keyboardWrapper.id="keyboardWrapper";
-      document.body.append(keyboardWrapper);
-      target=keyboardWrapper;
-      console.log("making default keyboardWrapper");
-   } else {
-      target=document.getElementById(domID);
-   }
-   */
    var notePercent=100/(octaves*7+1);
    var octavePercent=notePercent*7;
    
    // first setup keyboard div...
 
-   var keyboard= document.body.appendChild(createElement("div",{className:"keyboard"}));
-   keyboard.appendChild(topPanel(instance));
-
+   var keyboard= createElement("div",{className:"keyboard"});
 
    // add octaves... 
    for (var count=octaveStart; count<octaveEnd; count++){
@@ -168,6 +147,12 @@ var makeKeyboard=function(octaves=2, domID, octaveStart){
    
    // add eventlisteners
    addTypeListener(keyboard);
+
+   // make draggable!
+   keyboard=draggableComponentWrapper(keyboard,instance);
+
+   document.body.appendChild(keyboard);
+
    return keyboard;// not strictly necessary...
 }
 

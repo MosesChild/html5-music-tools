@@ -13,7 +13,7 @@ const makeCanvas=(id)=>{
 
 const makeScope=(name) =>{
     const id=name ? name :defaultInstance("scope");
-    const canvas=makeCanvas(instance);
+    const canvas=makeCanvas(id);
     const analyser=audioContext.createAnalyser();
     const canvasCtx= canvas.getContext("2d");
 
@@ -24,11 +24,11 @@ const makeScope=(name) =>{
         analyser.getByteTimeDomainData(dataArray);
         analyser.fftSize = 2048;
       
-        canvasCtx.fillStyle = "rgb(200, 200, 200)";
+        canvasCtx.fillStyle = "rgb(00, 00, 00)";
         canvasCtx.fillRect(0, 0, canvas.width, canvas.height);
       
         canvasCtx.lineWidth = 2;
-        canvasCtx.strokeStyle = "rgb(0, 0, 0)";      
+        canvasCtx.strokeStyle = "rgb(51, 255, 0)";      
         canvasCtx.beginPath();
       
         var sliceWidth = canvas.width * 1.0 / bufferLength;

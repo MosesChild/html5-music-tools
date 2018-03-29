@@ -1,12 +1,18 @@
 .sequencer {
-  width: 100vw;
-  height: 20vh;
+ /* position: relative;*/
+  width: 100%;
+  height: 100%;
   display: flex;
-  box-shadow: 1px 1px black;
+  flex-flow: row wrap;
+ /* box-shadow: 1px 1px black;*/
 }
-
+.oscilloscope {
+  height: 100%;
+  width: 100%;
+}
 .step {
-  flex: 1;
+  flex: 1 1 1%;
+  height: 100%;
   box-shadow: inset 0 0 0 1px black;
 }
 .step.on {

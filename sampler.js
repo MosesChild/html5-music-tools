@@ -88,42 +88,42 @@ function toggleRecord(analyser, e) { /*'bind' at sampler.init() : this='recorder
   }
 }
 
-var instance = 0;
-
-function makeSamplerInterface(id){
-  const sampler = createElement("div", { id: id, className: "sampler" });
-  const recordButton = createMaterialIconButton(id+"_recordToggle", "fiber_manual_record");
-  recordButton.className="recordToggle";
-  recordButton.firstChild.classList.toggle("record");
-  sampler.appendChild(recordButton)
-  const menuButton= createMaterialIconButton(id+"_menu", "menu");
-  sampler.appendChild(menuButton);
-  menuButton.className="menu";
-
-  sampleList=createElement("div",{id: id+"_samples", className: "sampleList"})
-  sampleList.append(createElement("audio", { id: id+"_recordedAudio"}));
-
-  sampler.appendChild(sampleList);
-  return sampler;
-}
 
 function makeSampler () { 
   const id=defaultInstance("sampler");
-  const scope=makeScope(audioContext);
-  const container=document.body.appendChild(makeSamplerInterface(id));
-  const recordedAudio=$('#'+id+'_recordedAudio');
+  const samplerInterface =createElement("div", { id: id, className: "sampler" });
+  const wrapper=draggableComponentWrapper(samplerInterface,id);
+  const oscilloscope=makeScope(audioContext);
+  const scope=oscilloscope.canvas;
+  const analyser=oscilloscope.analyser;
+  //const container=document.body.appendChild(makeSamplerInterface(id));
+  const recordButton = createMaterialIconButton(id+"_recordToggle", "fiber_manual_record");
+  const sampleList=createElement("div",{id: id+"_samples", className: "sampleList"});
+  const recordedAudio=createElement("audio", { id: id+"_recordedAudio"});
   const recorder = setupMediaStreamRecorder(recordedAudio);
-  const boundToggleRecord=toggleRecord.bind(recorder, scope.analyser)
-  const toggleRecordButton=$("#"+id+"_recordToggle").onclick=boundToggleRecord;
-  container.appendChild(scope.canvas);
-  const sampler={
+  const boundToggleRecord=toggleRecord.bind(recorder, analyser)
+  //const toggleRecordButton=$("#"+id+"_recordToggle").onclick=boundToggleRecord;
+
+  var sampler={
     id,
     audioContext,
-    container,
+ //   container,
     recordedAudio,
     scope,
   };
-  voice=voice.bind(sampler,scope.analyser);
+  wrapper.appendChild(samplerInterface);
+  samplerInterface.appendChild(scope);
+  samplerInterface.appendChild(recordButton);
+  wrapper.appendChild(sampleList);
+  sampleList.appendChild(recordedAudio);
+recordButton.onclick=boundToggleRecord;
+  
+  recordButton.className="recordToggle";
+  recordButton.firstChild.classList.toggle("record");
+
+  //container.appendChild(scope.canvas);
+  document.body.appendChild(wrapper);
+  voice=voice.bind(sampler,analyser);
   //makeSample= makeSample.bind(sampler);
     return sampler;
   };

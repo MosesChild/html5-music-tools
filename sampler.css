@@ -2,23 +2,19 @@
     position: relative;
     width: 300; /*default */
 }
-.sampler>.menu{
-    position: absolute;
-    top: 0px;
-    left: 0px;
-}
+
+
 .recordToggle {
     position: absolute;
     bottom: 0px;
     left: 0px;
+    z-index: 4;
 }
-.sampleList {
-    width:inherit;
-}
+
 .sample {
     position:relative;
     bottom: 0px;
-    width: inherit;
+    width: 100%;
     background: white;
     display: block;
     height: 32px; 

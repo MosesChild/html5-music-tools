@@ -1,26 +1,30 @@
-const makeSteps = ( stepCount, startNumber = 0 ) => {
+const makeSteps = ( stepContainer, stepCount, startNumber = 0 ) => {
   for (let i = startNumber; i < stepCount; i++) {
     let step = createElement("div", {
       id: "step" + i,
       className: "step",
       onclick: clickSeqStep
     });
-    $(".sequencer").appendChild(step);
+    stepContainer.appendChild(step);
   }
+  return stepContainer;
 };
+
 const initializeStepsContainer=(stepCount) => {
-  const sequencer = document.body.appendChild(createElement("div", { className: "sequencer" }));
-  makeSteps(stepCount);
-  return
+  var stepContainer = createElement("div", { className: "sequencer" });
+  makeSteps(stepContainer, stepCount);
+  stepContainer=draggableComponentWrapper(stepContainer,"sequencer");
+  return stepContainer;
 }
 const makeSeqPanel =( bpm, timeSigTop, timeSigBottom, ButtonEventHandler1, ButtonEventHandler2 )=> {
   const seqButtons = [["togglePlay", "play_arrow", ButtonEventHandler1]];//["back","skip_previous",ButtonEventHandler2],
   const panel = createPanel(seqButtons,"seqPanel");
   panel.appendChild(createElement("input", { type: "number", id: "bpm", className: "panel-element", value: bpm }));
-  const wrapper =panel.appendChild(createElement("div", {className:"timeSigWrapper panel-element"}))
-  wrapper.appendChild(createElement("input", { type: "number", id: "timeTop", value: timeSigTop }))
-  wrapper.appendChild(createElement("input", { type: "number", id: "timeBottom", value: timeSigBottom }))
+  const timeSig =panel.appendChild(createElement("div", {className:"timeSigWrapper panel-element"}))
+  timeSig.appendChild(createElement("input", { type: "number", id: "timeTop", value: timeSigTop }))
+  timeSig.appendChild(createElement("input", { type: "number", id: "timeBottom", value: timeSigBottom }))
   panel.appendChild(createElement("div", { id: "panelClick", className: "panel-element"}));
+  
   return panel;
 };
 
@@ -39,7 +43,7 @@ const makeSequencer = ({
   timeSigBottom,
   stepsPerTop,
   measures,
-  sequencerWindow: initializeStepsContainer(stepsPerTop * timeSigTop * measures),
+  sequencerWindow: document.body.appendChild(initializeStepsContainer(stepsPerTop * timeSigTop * measures)),
   panel: document.body.appendChild(makeSeqPanel(bpm,timeSigTop,timeSigBottom, this.togglePlay)),
   steps: document.getElementsByClassName("step"),
   startButton: document.getElementById("togglePlay"),

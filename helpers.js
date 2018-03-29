@@ -16,6 +16,19 @@ const createElement = (element, attributesObj) => {
     }
     return newElement;
   };
+  const draggableComponentWrapper = (component,instance) => {
+    const wrapper=createElement("div", {className:"wrapper"});
+    const topPanel=createElement("div", {className:"topPanel"});
+    // topPanel should be flex-container, justify content space-between(css);
+    const menu=createElement("i", {className: "material-icons menu", id: instance+"_menu", textContent: "menu"});
+    const handle=createElement("i", {className: "material-icons handle", id: instance+"_handle", textContent: "drag_handle"}); 
+    // hook still needed for menus!
+    topPanel.appendChild(menu);
+    topPanel.appendChild(handle);   
+    wrapper.appendChild(topPanel);
+    wrapper.appendChild(component);
+    return wrapper;
+}
 
   const createMaterialIconButton = (id,iconName, eventHandler) => {
     const button = createElement("a", {id: id});
@@ -42,18 +55,21 @@ const createElement = (element, attributesObj) => {
   };
 
   window.onload = function(){
+    /*
     interact('.drop-element')
       .draggable({
         onmove: window.dragMoveListener
       })
-    interact('.keyboard')
+      */
+    interact('.wrapper')
       .draggable({
         allowFrom: '.handle',
         onmove: dragMoveListener
       })
     .resizable({
       preserveAspectRatio: false,
-      edges: { left: true, right: true, bottom: false, top: false }
+      ignoreFrom: ['.key', '.handle'],
+      edges: { left: true, right: true, bottom: true, top: false }
     })
     .on('resizemove', function (event) {
       var target = event.target,
