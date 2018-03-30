@@ -1,9 +1,10 @@
 .sequencer {
  /* position: relative;*/
-  width: 100%;
-  height: 100%;
+  flex: 1 0;
+  border-left: 10px solid black;
+  border-right: 10px solid black;
   display: flex;
-  flex-flow: row wrap;
+  flex-flow: row nowrap;
  /* box-shadow: 1px 1px black;*/
 }
 .oscilloscope {
