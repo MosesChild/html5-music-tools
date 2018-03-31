@@ -1,7 +1,6 @@
 var audioContext = audioContext ? audioContext : new AudioContext();
 var lastSample;
 
-
 /*
 problem : making sure that new components get added to setup properly so that function binding can occur...
 
@@ -38,45 +37,56 @@ const setupMediaStreamRecorder = targetAudioElement => {
           targetAudioElement.playbackRate = 1;
           targetAudioElement.autoplay = false;
           makeSample(targetAudioElement);
+          updatePatchList();
         }
       };
     })
     .catch(e => console.log(e));
 };
-const makeSample = (targetAudioElement) => {
- console.log(targetAudioElement);
- const newSample = targetAudioElement.cloneNode(true);
- const id=defaultInstance("sample");
- const sampleWrapper = createElement("div", { className: "sampleWrapper"});
- const sampleTrigger= createElement("span", { className:"key"});
- sampleTrigger.dataset.midinote="C4"
- sampleTrigger.dataset.octave= "4"
- sampleTrigger.dataset.id="0";
- newSample.id=id
- newSample.className="sample";
- //newSample.controls = true;
- const playButton=sampleWrapper.appendChild(createElement("a", "playSample"));
- playButton.onclick= e =>{
-   console.log("clicked");
-   voice(newSample.src)
-};
- playButton.appendChild(createElement("i", {className:"material-icons", textContent:"play_arrow"}))
- sampleWrapper.appendChild(sampleTrigger)
- sampleWrapper.appendChild(newSample)
- sampleWrapper.appendChild(createElement("span",{textContent:id}))
- sampleWrapper.appendChild(playButton);
- 
- lastSample = newSample; // global variable enables trigger to last sample without explicit link...
- targetAudioElement.parentNode.appendChild(sampleWrapper);
-}
+const makeSample = targetAudioElement => {
+  console.log(targetAudioElement);
+  const newSample = targetAudioElement.cloneNode(true);
+  const id = defaultInstance("sample");
+  const sampleWrapper = createElement("div", { className: "sampleWrapper" });
+  const sampleTrigger = createElement("span", { className: "key" });
+  sampleTrigger.dataset.midinote = "C4";
+  sampleTrigger.dataset.octave = "4";
+  sampleTrigger.dataset.id = "0";
+  newSample.id = id;
+  newSample.className = "sample";
+  //newSample.controls = true;
 
-function toggleRecord(analyser, e) { /*'bind' at sampler.init() : this='recorder' instance (mediaDevice for start/stop), 
-                                      analyser = sampler.scope.analyser for canvas visual */   
+  const playButton = sampleWrapper.appendChild(
+    createElement("a", "playSample")
+  );
+  playButton.onclick = e => {
+    console.log("clicked");
+    voice(newSample.src);
+  };
+  playButton.appendChild(
+    createElement("i", {
+      className: "material-icons",
+      textContent: "play_arrow"
+    })
+  );
+  sampleWrapper.appendChild(sampleTrigger);
+  sampleWrapper.appendChild(newSample);
+  sampleWrapper.appendChild(createElement("span", { textContent: id }));
+  sampleWrapper.appendChild(playButton);
+
+  lastSample = newSample; // global variable enables trigger to last sample without explicit link...
+  targetAudioElement.parentNode.appendChild(sampleWrapper);
+};
+
+function toggleRecord(analyser, e) {
+  /*'bind' at sampler.init() : this='recorder' instance (mediaDevice for start/stop), 
+                                      analyser = sampler.scope.analyser for canvas visual */
+
   console.log("toggleRecord", arguments);
   var icon = e.target.closest("i");
   icon.classList.toggle("record");
   if (icon.textContent === "fiber_manual_record") {
-    icon.textContent = "stop"
+    icon.textContent = "stop";
     source.connect(analyser);
     audioChunks = [];
     recorder.start();
@@ -87,46 +97,53 @@ function toggleRecord(analyser, e) { /*'bind' at sampler.init() : this='recorder
   }
 }
 
-
-function makeSampler () { 
-  const id=defaultInstance("sampler");
-  const samplerInterface =createElement("div", { id: id, className: "sampler" });
-  const wrapper=draggableComponentWrapper(samplerInterface,id);
-  const oscilloscope=makeScope(id+"scope");
-  const scope=oscilloscope.canvas;
-  const analyser=oscilloscope.analyser;
+function makeSampler() {
+  const id = defaultInstance("sampler");
+  const samplerInterface = createElement("div", {
+    id: id,
+    className: "sampler"
+  });
+  const wrapper = draggableComponentWrapper(samplerInterface, id);
+  const oscilloscope = makeScope(id + "scope");
+  const scope = oscilloscope.canvas;
+  const analyser = oscilloscope.analyser;
   //const container=document.body.appendChild(makeSamplerInterface(id));
-  const recordButton = createMaterialIconButton(id+"_recordToggle", "fiber_manual_record");
-  const sampleList=createElement("div",{id: id+"_samples", className: "sampleList"});
-  const recordedAudio=createElement("audio", { id: id+"_recordedAudio"});
+  const recordButton = createMaterialIconButton(
+    "recordToggle",
+    "fiber_manual_record"
+  );
+  const sampleList = createElement("div", {
+    id: id + "_samples",
+    className: "sampleList"
+  });
+  const recordedAudio = createElement("audio", { id: id + "_recordedAudio" });
   const recorder = setupMediaStreamRecorder(recordedAudio);
-  const boundToggleRecord=toggleRecord.bind(recorder, analyser)
+  const boundToggleRecord = toggleRecord.bind(recorder, analyser);
   //const toggleRecordButton=$("#"+id+"_recordToggle").onclick=boundToggleRecord;
-
-  var sampler={
+  recordButton.className = "recordToggle";
+  var sampler = {
     id,
     audioContext,
- //   container,
+    //   container,
     recordedAudio,
-    scope,
+    scope
   };
   wrapper.appendChild(samplerInterface);
   samplerInterface.appendChild(scope);
   samplerInterface.appendChild(recordButton);
   wrapper.appendChild(sampleList);
   sampleList.appendChild(recordedAudio);
-recordButton.onclick=boundToggleRecord;
-  
- // recordButton.className="recordToggle";
+  recordButton.onclick = boundToggleRecord;
+
+  // recordButton.className="recordToggle";
   recordButton.firstChild.classList.toggle("record");
 
   //container.appendChild(scope.canvas);
   document.body.appendChild(wrapper);
-  voice=voice.bind(sampler,analyser);
+  voice = voice.bind(sampler, analyser);
   //makeSample= makeSample.bind(sampler);
-    return sampler;
-  };
-
+  return sampler;
+}
 
 /* a helper function to work with a keyboard... it uses dataset.octave and dataset.id (a value 0-11 that represents 
     "C" to "B") to create a detune value (in cents).  A 'C' value is the default value of the original sample.
@@ -143,7 +160,7 @@ const keyboardSamplerConversion = noteElement => {
   return cents;
 };
 function voice(analyser, sample, adjustmentFunction) {
-  console.log("voice",arguments);
+  console.log("voice", arguments);
   if (sample) {
     bufferSound(audioContext, sample).then(function(buffer) {
       var src = audioContext.createBufferSource();
@@ -156,7 +173,7 @@ function voice(analyser, sample, adjustmentFunction) {
       src.start();
     });
   }
-};
+}
 /* a generic audio-voice out. AdjustmentFunction is an optional callback (a hook) that can 
 adjust the internal playback parameters with 'src'... Currently used by playNote */
 
@@ -167,13 +184,11 @@ on the voice callback.
 const playNote = function(noteElement, sound) {
   const cents = keyboardSamplerConversion(noteElement);
   callback = src => src.detune.setValueAtTime(cents, 0);
-  const currentSound= sound ? sound :
-    lastSample ? lastSample.src : null;
-  if (currentSound){
+  const currentSound = sound ? sound : lastSample ? lastSample.src : null;
+  if (currentSound) {
     voice(currentSound, callback);
   }
 };
-
 
 function bufferSound(ctx, url) {
   var p = new Promise(function(resolve, reject) {

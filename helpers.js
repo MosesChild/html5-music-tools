@@ -16,9 +16,9 @@ const createElement = (element, attributesObj) => {
 };
 const draggableComponentWrapper = (component, instance, menuComponent) => {
   const defaultSizes = {
-    keyboard: { width: "80vw", height: "10vh" },
+    keyboard: { width: "80vw", height: "20vh" },
     sampler: { width: "40vh", height: "20vh" },
-    sequencer: { width: "80vw", height: "10vh" },
+    sequencer: { width: "80vw", height: "15vh" },
     menu: { width: "10vh" }
   };
   const wrapper = createElement("div", { className: "wrapper" });
@@ -51,20 +51,35 @@ const draggableComponentWrapper = (component, instance, menuComponent) => {
   return wrapper;
 };
 
-const createMaterialIconButton = (id, iconName, eventHandler) => {
-  const button = createElement("a", { id: id });
-  if (!id) {
-    throw error("function must be provided with iconName and id");
-  }
-  button.appendChild(
-    createElement("i", { className: "material-icons", textContent: iconName })
-  );
-  if (eventHandler) {
+const makeMaterialIcon=(iconName=>createElement("i",{className: "material-icons", textContent:iconName}));
+
+const createMaterialIconButton = (className, iconName, eventHandler) => {
+  const button=createElement("a",{className:className, href:"#"});
+  const icon=makeMaterialIcon(iconName);
+  button.appendChild(icon);
+  if (eventHandler) { 
     button.onclick = eventHandler;
   }
   return button;
 };
 
+const createMaterialIconToggleButton=(toggleClassName, iconName1, iconName2, toggleEvent1,toggleEvent2)=>{
+  
+}
+const classToggler = (instanceID, className) => {
+  const instance=$("."+instanceID)
+  const currentItem= instance.getElementsByClassName(className)[0];
+  currentItem.classList.toggle("toggleOn");
+}
+const eventChanger = (event1,event2=event1, toggleClass, icon1, icon2) => {
+  if (toggleClass.contains("toggleOn")){
+    toggleClass.lastChild=makeMaterialIcon(icon2);
+    event1();
+  } else {
+    toggleClass.lastChild=makeMaterialIcon(icon1);
+    event2();
+  }
+};
 
 const createPanel = (idIconNameArray, id) => {
   var panel = createElement("p", { className: "panel", id: id });

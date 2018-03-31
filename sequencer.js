@@ -46,7 +46,7 @@ const makeSequencer = ({
   sequencerWindow: document.body.appendChild(initializeStepsContainer(stepsPerTop * timeSigTop * measures)),
   panel: document.body.appendChild(makeSeqPanel(bpm,timeSigTop,timeSigBottom, this.togglePlay)),
   steps: document.getElementsByClassName("step"),
-  startButton: document.getElementById("togglePlay"),
+  startButton: $(".togglePlay"),
   bpmInput: document.getElementById("bpm"),
   panelClick: document.getElementById("panelClick"),
   step: 0,
@@ -54,13 +54,13 @@ const makeSequencer = ({
   playTimer: null,
   stepTime: 60 / bpm / (stepsPerTop ),
   init() { 
-    document.getElementById("togglePlay").firstChild.classList.add("large");
+    this.startButton.firstChild.classList.add("large");
     // currently necessary to get default bindings...
     this.startButton.onclick = this.togglePlay.bind(this);
     this.bpmInput.onchange = this.changeBPM.bind(this);
   },
   togglePlay(e){
-    let icon=$("#togglePlay").firstChild;
+    let icon=this.startButton.firstChild;
     if (this.playTimer){
       this.stop();
       console.log(icon);

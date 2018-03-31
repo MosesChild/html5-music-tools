@@ -139,7 +139,8 @@ var makeKeyboard=function(octaves=2, domID, octaveStart){
    // and add the top note (upper 'C');
    var topKey=makeKey(0,octaveEnd);
    topKey.style.width=notePercent+"%";
-   topKey.style.height="100%"
+   topKey.style.height="100%";
+   topKey.classList.add("bottom")
    keyboard.append(topKey); 
    
    // add eventlisteners
