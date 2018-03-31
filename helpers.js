@@ -41,8 +41,6 @@ const draggableComponentWrapper = (component, instance, menuComponent) => {
     if (defaultSizes[cname].height) {
       wrapper.style.height = defaultSizes[cname].height;
     }
-
-    console.log("great", wrapper);
   }
   topPanel.appendChild(menu);
   topPanel.appendChild(handle);
@@ -103,37 +101,30 @@ const menu = list => {
   console.log("menu", dragmenu);
 };
 
-const updatePatchList = () => {
-  const patchNames = getPatchNames();
+
+
+const makeButtons = (array) => {
+  const group=[];
+  array.forEach(item => group.push(createElement("button", { textContent: item, value: item })));
+  return group;
+};
+
+const getAudioSamples=()=>{
+  var audioSamples=document.getElementsByClassName("sample");  
   const patchList = $(".patchList");
   while (patchList.hasChildNodes()) {
     patchList.removeChild(patchList.lastChild);
   }
-  makeButtons(patchNames);
-};
-
-const makeButtons = (array, current) => {
-  const patchList = $(".patchList");
-  array.forEach(item => patchList.appendChild(createElement("button", { textContent: item, value: item })));
-};
-
-const getPatchNames = () => {
-  var sampleElements = $(".sample");
-  if (!sampleElements){ return};
-
-  if (sampleElements.length>1){
-    let samples=[];
-  sampleElements.forEach(element =>{
-    console.log(element.id)
-    samples.push(element.id);
-  })
-
-  console.log("patchNames", samples)
-  return samples;
-} else {
-  return [sampleElements.id]
+  console.log("getPatchNames", audioSamples);
+  for(sample of audioSamples){
+    console.log(sample);
+    var audioDup=sample.cloneNode();
+    audioDup.className="";
+    audioDup.controls=true;
+    patchList.appendChild(audioDup);
+  };
 }
-};
+
 
 window.onload = function() {
   interact(".panel").draggable({

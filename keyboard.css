@@ -22,12 +22,13 @@
 }
 .patchList:hover{
     overflow-y: visible;
-    z-index:20;
+    border-bottom: 10px solid black;
 }
 .patchList button, input[type="submit"], input[type="reset"] {
     background: black;
     color:rgb(51, 255, 0);
-    border: none;
+    border:none;
+    border-bottom: 5px solid black;
 
     font: inherit;
     cursor: pointer;

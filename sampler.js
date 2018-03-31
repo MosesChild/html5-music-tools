@@ -19,13 +19,13 @@ when component added
 
 */
 const setupMediaStreamRecorder = targetAudioElement => {
+
   navigator.mediaDevices
     .getUserMedia({ audio: true })
-
     .then(stream => {
       recorder = new MediaRecorder(stream);
       source = audioContext.createMediaStreamSource(stream);
-      //  source.connect(audioContext.destination);
+      
       recorder.ondataavailable = e => {
         audioChunks.push(e.data);
         if (recorder.state == "inactive") {
@@ -34,8 +34,11 @@ const setupMediaStreamRecorder = targetAudioElement => {
           const sampler = targetAudioElement.parentNode;
           targetAudioElement.src = URL.createObjectURL(blob);
           targetAudioElement.controls = false;
+
           targetAudioElement.playbackRate = 1;
           targetAudioElement.autoplay = false;
+          console.log( "controller",targetAudioElement.controller,"audioTracks",targetAudioElement.audioTracks)
+          //source.connect(AnalyserNode);
           makeSample(targetAudioElement);
           updatePatchList();
         }
@@ -44,17 +47,22 @@ const setupMediaStreamRecorder = targetAudioElement => {
     .catch(e => console.log(e));
 };
 const makeSample = targetAudioElement => {
-  console.log(targetAudioElement);
+  //console.log(targetAudioElement);
   const newSample = targetAudioElement.cloneNode(true);
   const id = defaultInstance("sample");
   const sampleWrapper = createElement("div", { className: "sampleWrapper" });
+  const patchName = createElement("span", {textContent: id, className:"patch"});
   const sampleTrigger = createElement("span", { className: "key" });
+  //console.log(newSample.audioContext);
+  patchName.dataset.id=id;
+ // newSample.connect(AnalyserNode);
   sampleTrigger.dataset.midinote = "C4";
   sampleTrigger.dataset.octave = "4";
   sampleTrigger.dataset.id = "0";
   newSample.id = id;
   newSample.className = "sample";
-  //newSample.controls = true;
+
+  newSample.controls = true;
 
   const playButton = sampleWrapper.appendChild(
     createElement("a", "playSample")
@@ -69,10 +77,11 @@ const makeSample = targetAudioElement => {
       textContent: "play_arrow"
     })
   );
-  sampleWrapper.appendChild(sampleTrigger);
+  sampleWrapper.appendChild(patchName);
   sampleWrapper.appendChild(newSample);
-  sampleWrapper.appendChild(createElement("span", { textContent: id }));
+
   sampleWrapper.appendChild(playButton);
+  sampleWrapper.appendChild(sampleTrigger);
 
   lastSample = newSample; // global variable enables trigger to last sample without explicit link...
   targetAudioElement.parentNode.appendChild(sampleWrapper);
