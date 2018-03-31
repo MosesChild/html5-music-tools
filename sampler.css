@@ -2,37 +2,26 @@
     position: relative;
     width: 300; /*default */
 }
-.soundToggle{
-    position: absolute;
-    bottom: 0px;
-    right: 0px;
-    color: white;
-    opacity: .2;
-    padding: 5px;
-}
+
+
 .recordToggle {
     position: absolute;
     bottom: 0px;
     left: 0px;
     z-index: 4;
-    padding: 5px;
 }
 
-.sampleWrapper {
-    display:flex;
-    justify-content: space-between;
+.sample {
+    position:relative;
     bottom: 0px;
     width: 100%;
     background: white;
+    display: block;
     height: 32px; 
-    border: 1px solid lightgrey;
 }
-
-.sampleWrapper span{
-    height: 100%;
+audio {
+    float: left;
 }
-
-.sampleWrapper a {
-    flex: 0 0 20px;
+span{
+        line-height: 40px;
 }
-
