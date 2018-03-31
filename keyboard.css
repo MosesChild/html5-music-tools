@@ -1,36 +1,41 @@
 .wrapper {
+    display: flex;
+    flex-direction: column;
     width: 90vw;
     height: 10vh;
+    margin: 10px;
 }
 .keyboard {
-    height: 100%;
+    flex: 1 1 1%;
     box-shadow: inset -1px 0px black;
     border-left: 10px solid black;
     border-right: 10px solid black;
   /*  border-bottom: 2em solid black;*/
     background-color: "black";
 }
-.topPanel{
-    width: 100%;
-    height: 1em;
+
+
+.patchList{
+    width: 100px;
+    z-index: 20;
+    height: 100%;
+    overflow-y: hidden;
+}
+.patchList:hover{
+    overflow-y: visible;
+    height: 48px;
+    z-index:20;
+}
+.patchList button, input[type="submit"], input[type="reset"] {
     background: black;
-    display: flex;
-    flex-flow: row nowrap;
-    justify-content: space-between;
-    line-height: 2em;
-    height: 2em;
-    font-size: 20px;
-    color: green;
-    z-index: 10;
+    color:rgb(51, 255, 0);
+    border: none;
+    padding: 0;
+    font: inherit;
+    cursor: pointer;
+    outline: inherit;
 }
 
-.handle{
-    margin-right: 20px;
-    flex: 0 0 auto;
-}
-.menu{
-    flex: 0 0 auto;
-}
 .octave{
     float:left;
     height: 100%;

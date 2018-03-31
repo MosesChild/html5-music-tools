@@ -44,19 +44,18 @@ const setupMediaStreamRecorder = targetAudioElement => {
     .catch(e => console.log(e));
 };
 const makeSample = (targetAudioElement) => {
-  console.log(targetAudioElement);
+ console.log(targetAudioElement);
+ const newSample = targetAudioElement.cloneNode(true);
  const id=defaultInstance("sample");
- const sampleWrapper = createElement("div", { id: id, className: "sample" });
- const sampleTrigger= createElement("span", { textContent: id, className:"key"});
+ const sampleWrapper = createElement("div", { className: "sampleWrapper"});
+ const sampleTrigger= createElement("span", { className:"key"});
  sampleTrigger.dataset.midinote="C4"
  sampleTrigger.dataset.octave= "4"
  sampleTrigger.dataset.id="0";
- const newSample = sampleWrapper.appendChild(targetAudioElement.cloneNode(true));
+ newSample.id=id
+ newSample.className="sample";
  //newSample.controls = true;
  const playButton=sampleWrapper.appendChild(createElement("a", "playSample"));
-
-
- 
  playButton.onclick= e =>{
    console.log("clicked");
    voice(newSample.src)
@@ -64,10 +63,10 @@ const makeSample = (targetAudioElement) => {
  playButton.appendChild(createElement("i", {className:"material-icons", textContent:"play_arrow"}))
  sampleWrapper.appendChild(sampleTrigger)
  sampleWrapper.appendChild(newSample)
+ sampleWrapper.appendChild(createElement("span",{textContent:id}))
  sampleWrapper.appendChild(playButton);
-
+ 
  lastSample = newSample; // global variable enables trigger to last sample without explicit link...
-
  targetAudioElement.parentNode.appendChild(sampleWrapper);
 }
 
@@ -93,7 +92,7 @@ function makeSampler () {
   const id=defaultInstance("sampler");
   const samplerInterface =createElement("div", { id: id, className: "sampler" });
   const wrapper=draggableComponentWrapper(samplerInterface,id);
-  const oscilloscope=makeScope(audioContext);
+  const oscilloscope=makeScope(id+"scope");
   const scope=oscilloscope.canvas;
   const analyser=oscilloscope.analyser;
   //const container=document.body.appendChild(makeSamplerInterface(id));
@@ -118,7 +117,7 @@ function makeSampler () {
   sampleList.appendChild(recordedAudio);
 recordButton.onclick=boundToggleRecord;
   
-  recordButton.className="recordToggle";
+ // recordButton.className="recordToggle";
   recordButton.firstChild.classList.toggle("record");
 
   //container.appendChild(scope.canvas);

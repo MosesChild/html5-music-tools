@@ -103,22 +103,20 @@ function makeOctave(width, octaveNumber=4){
      octave.append(note);
    }
    return octave;
-}
-/*
-const topPanel =(instance)=>{ 
-      const topPanel=createElement("div", {className:"topPanel"});
-      const menu=createElement("i",{className: "material-icons menu", id: instance+"_menu", textContent: "menu"});
-      const handle=createElement("i",{className: "material-icons handle", id: instance+"_handle",
-textContent: "drag_handle"});
+};
 
-      topPanel.appendChild(menu);
-      
-      topPanel.appendChild(handle);   
-      return topPanel;
-}
-*/
+const makePatchWindow = (keyboard) =>{
+      const topPanel=keyboard.getElementsByClassName('topPanel')[0];
+      const dragHandle=keyboard.getElementsByClassName('handle')[0];
+      const patchSelector = createElement('div',{className:"patchList"});
+      topPanel.insertBefore(patchSelector,dragHandle);
+};
+
 var makeKeyboard=function(octaves=2, domID, octaveStart){
+      // currently doesn't check if other components have available patches...
       const instance=defaultInstance("keyboard");
+      
+
    freqTable=makeFreqTable();
    var w,octaveStart, octaveEnd, target;
    if (octaveStart==undefined){
@@ -142,7 +140,6 @@ var makeKeyboard=function(octaves=2, domID, octaveStart){
    var topKey=makeKey(0,octaveEnd);
    topKey.style.width=notePercent+"%";
    topKey.style.height="100%"
-
    keyboard.append(topKey); 
    
    // add eventlisteners
@@ -150,6 +147,8 @@ var makeKeyboard=function(octaves=2, domID, octaveStart){
 
    // make draggable!
    keyboard=draggableComponentWrapper(keyboard,instance);
+   // add patchlist to top bar and keyboard...
+   makePatchWindow(keyboard);
 
    document.body.appendChild(keyboard);
 
