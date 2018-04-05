@@ -3,7 +3,7 @@
 
 const LFOSettings = {
     frequency: {value: 3, min: 0, max: 20, step : 0.02},
-    amount: { value: 1, min: 0, max: 1, step: 0.01 },
+    amount: { value: 100, min: 0, max: 100, step: 1 },
   };
 
 const makeLFOinterface = () => {
@@ -28,7 +28,7 @@ const lfoControls=(lfo)=> ({
         sustain(e){lfo.sustain=e;},
         release(e){lfo.release=e;},
         LFOtype(e){lfo.osc.frequency.type=e },
-        waveform(e){lfo.osc.type=e; lfo.osc.frequency.setValue },
+        waveform(e){lfo.osc.type=e; },
 });
 const makeLFO=() => ({
         name: "LFO",
@@ -50,7 +50,7 @@ const makeLFO=() => ({
             this.inputs={"frequency":this.osc.frequency,"detune":this.osc.detune, "gain":this.gain},
             this.outputs= {"osc": this.osc, "gain": this.gain};
             this.osc.connect(this.gain);
-            this.gain.connect(this.scope.analyser);
+            this.osc.connect(this.scope.analyser);
             
             console.log("setOwner", this);
             let controlGroup=this.interface.getElementsByClassName("controlGroup");
@@ -59,8 +59,8 @@ const makeLFO=() => ({
                 setOwner(control, this);
             }
             this.osc.frequency.value = 3;
-            this.osc.type = "square";
-            this.gain.gain.value = 0.5;            
+            this.osc.type = "sine";
+            this.gain.gain.value = 100;            
             this.osc.start();
         },
         disconnect(destination){

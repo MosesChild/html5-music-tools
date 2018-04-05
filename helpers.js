@@ -265,7 +265,7 @@ window.onload = function() {
     .resizable({
       preserveAspectRatio: false,
       ignoreFrom: [".key", ".handle"],
-      edges: { left: true, right: true, bottom: true, top: false }
+      edges: { left: true, right: true, bottom: false, top: true }
     })
     .on("resizemove", function(event) {
       var target = event.target,
