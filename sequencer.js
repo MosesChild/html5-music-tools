@@ -30,14 +30,14 @@ const makeSeqPanel =( bpm, timeSigTop, timeSigBottom, ButtonEventHandler1, Butto
 
 
 const makeSequencer = ({
-  instanceName = defaultInstance("sequencer"),
+  instance = defaultInstance("sequencer"),
   bpm = 120,
   timeSigTop = 4,
   timeSigBottom = 4,
   stepsPerTop = 4,
   measures = 2
 } = {}) => ({
-  instanceName,
+  instance,
   bpm,
   timeSigTop,
   timeSigBottom,
@@ -58,6 +58,8 @@ const makeSequencer = ({
     // currently necessary to get default bindings...
     this.startButton.onclick = this.togglePlay.bind(this);
     this.bpmInput.onchange = this.changeBPM.bind(this);
+    // add to our environment variables.
+    Environment[this.instance]=this;
   },
   togglePlay(e){
     let icon=this.startButton.firstChild;

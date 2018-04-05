@@ -134,9 +134,7 @@ function makeOctave(width, octaveNumber = 4) {
   }
   return octave;
 }
-function editMyId(e){
-      
-}
+
 const makePatchWindow = keyboard => {
   const topPanel = keyboard.getElementsByClassName("topPanel")[0];
   const dragHandle = keyboard.getElementsByClassName("handle")[0];
@@ -211,15 +209,15 @@ var makeKeyboard = function(octaves = 2, domID, octaveStart) {
 
   // add eventlisteners
   addTypeListener(keyboard);
-
+  Environment[instance]=keyboard;   
   // make draggable!
   keyboard = draggableComponentWrapper(keyboard, instance);
   // add patchlist to top bar and keyboard...
   makePatchWindow(keyboard);
 
   document.body.appendChild(keyboard);
-
-  return keyboard; // not strictly necessary...
+  
+  //return keyboard; // not strictly necessary...
 };
 
 function addTypeListener(element, octave = 4) {

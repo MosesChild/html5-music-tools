@@ -11,6 +11,20 @@
             "request": "launch",
             "sourceMaps": false,
             "file": "${workspaceFolder}/index.html"
+        },
+        {
+            "name": "Launch synth.html (disable sourcemaps)",
+            "type": "chrome",
+            "request": "launch",
+            "sourceMaps": false,
+            "file": "${workspaceFolder}/synth.html"
+        },
+        {
+            "name": "Launch LFOtest.html (disable sourcemaps)",
+            "type": "chrome",
+            "request": "launch",
+            "sourceMaps": false,
+            "file": "${workspaceFolder}/LFOtest.html"
         }
     ]
 }

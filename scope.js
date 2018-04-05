@@ -1,19 +1,9 @@
 var audioContext = audioContext ? audioContext : new AudioContext;
 
 
-//var analyser = audioContext.createAnalyser();
-const makeCanvas=(id)=>{
-    const canvas = document.getElementById(id) ? document.getElementById(id)
-    : document.body.appendChild(document.createElement("canvas"));
-    canvas.className="oscilloscope";
-    canvas.id=id;
-    return canvas;
-};
-
-
 const makeScope=(name) =>{
-    const id=name ? name :defaultInstance("scope");
-    const canvas=makeCanvas(id);
+    const instance=name ? name :defaultInstance("scope");
+    const canvas=createElement("canvas",{className:"scope", id: instance});
     const analyser=audioContext.createAnalyser();
     const canvasCtx= canvas.getContext("2d");
 
@@ -51,11 +41,12 @@ const makeScope=(name) =>{
     }
 
     draw();
-
-    return {
+    let scope={
         canvas: canvas,
         analyser: analyser,
-    }
+    };
+    Environment[instance]=scope;
 
+    return scope;
 }
 

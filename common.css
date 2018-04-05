@@ -20,6 +20,10 @@ body {
 button {
     width:100%;
 }
+.scope{
+    width:100%;
+    height: 100%;
+}
 /* Customization to limit height of the menu */
 .custom-restricted {
     height: 160px;
@@ -38,6 +42,7 @@ button {
     border-radius: 8px;
     z-index: 10;
 }
+
 .menu{
     background-color: darkgray;
 }
@@ -45,9 +50,11 @@ button {
 .handle{
     margin-right: 20px;
     flex: 0 0 auto;
+    justify-content: flex-end;
 }
 .menuIcon{
     flex: 0 0 auto;
+
 }
 /* Rules for sizing the icon. */
 .material-icons.md-18 { font-size: 18px; }
@@ -56,3 +63,59 @@ button {
 .material-icons.large { font-size: 48px; }
 
 .material-icons.record {color: red;}
+
+.fader {
+    flex: 0 0 ;
+    width:24px;
+    padding: 2px;
+    display: flex;
+    flex-flow: column wrap;
+}
+.fader span {
+    overflow-x: hidden;
+    padding-bottom: 5px;
+    flex: 1 0 20px;
+    width: 24px;
+    font-size: 10px;
+}
+.sliderWrapper{
+    flex: 1 0 80px;
+    position: relative;
+    height: 80px;
+}
+.slider{
+    height: 20px;
+    width: 80px;
+    transform-origin: 40px 40px;
+    transform: rotate(-90deg);
+}
+.controlGroup{
+    display:inline-flex;
+    justify-content: space-around;
+    flex-flow:row wrap;
+    margin: 10px;
+}
+.groupLabel{
+    order: 0;
+    text-align: center;
+    line-height: 1.5;
+    flex: 1 1 100%;
+}
+.trigger {
+    flex: 0 0 50px;
+    order: 1;
+    margin-left: 20px;
+    align-self: center;
+    background-color: white;
+    height: 50px;
+    border: 2px solid lightseagreen;
+}
+.trigger.hit {
+    background-color: yellow;
+
+}
+.selector{
+    background-color: white;
+    list-style: none;
+    width: 200px;
+}

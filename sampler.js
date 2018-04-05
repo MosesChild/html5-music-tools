@@ -151,6 +151,7 @@ function makeSampler() {
   document.body.appendChild(wrapper);
   voice = voice.bind(sampler, analyser);
   //makeSample= makeSample.bind(sampler);
+  Environment[id]=this;
   return sampler;
 }
 

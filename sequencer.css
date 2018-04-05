@@ -8,10 +8,7 @@
   flex-flow: row nowrap;
  /* box-shadow: 1px 1px black;*/
 }
-.oscilloscope {
-  height: 100%;
-  width: 100%;
-}
+
 .step {
   flex: 1 1 1%;
   height: 100%;

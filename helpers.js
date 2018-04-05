@@ -1,9 +1,12 @@
 //Make the DIV element draggagle:
+const Environment ={connections:[]};
 
 const defaultInstance = componentName => {
   const component = document.getElementsByClassName(componentName);
-  return componentName + component.length;
+  const instanceName=componentName + component.length;
+  return instanceName;
 };
+
 const createElement = (element, attributesObj) => {
   var newElement = document.createElement(element);
   if (attributesObj) {
@@ -14,26 +17,30 @@ const createElement = (element, attributesObj) => {
   }
   return newElement;
 };
-const draggableComponentWrapper = (component, instance, menuComponent) => {
+const draggableComponentWrapper = (component, instance) => {
+  const wrapper = createElement("div", { className: "wrapper" });
+  const topPanel = createElement("div", { className: "topPanel" });
   const defaultSizes = {
     keyboard: { width: "80vw", height: "20vh" },
     sampler: { width: "40vh", height: "20vh" },
     sequencer: { width: "80vw", height: "15vh" },
-    menu: { width: "10vh" }
+    menu: { width: "10vh" },
+    LFO: { width: "40vh"}
   };
-  const wrapper = createElement("div", { className: "wrapper" });
-  const topPanel = createElement("div", { className: "topPanel" });
+  if (instance){
   // topPanel should be flex-container, justify content space-between(css);
-  const menu = createElement("i", {
+  let menu = createElement("i", {
     className: "material-icons menuIcon",
     id: instance + "_menu",
     textContent: "menu"
   });
+  topPanel.appendChild(menu);
+  }
   const handle = createElement("i", {
     className: "material-icons handle",
-    id: instance + "_handle",
     textContent: "drag_handle"
   });
+
   // hook still needed for menus!
   const cname = component.className;
   if (defaultSizes[cname]) {
@@ -42,7 +49,6 @@ const draggableComponentWrapper = (component, instance, menuComponent) => {
       wrapper.style.height = defaultSizes[cname].height;
     }
   }
-  topPanel.appendChild(menu);
   topPanel.appendChild(handle);
   wrapper.appendChild(topPanel);
   wrapper.appendChild(component);
@@ -102,12 +108,134 @@ const menu = list => {
 };
 
 
-
 const makeButtons = (array) => {
   const group=[];
   array.forEach(item => group.push(createElement("button", { textContent: item, value: item })));
   return group;
 };
+
+function makeMultiSelector(array){
+  const wrapper=createElement("div",{className:"menu"});
+  const selections=createElement("ul",{className:""});
+  array.forEach(item =>{ 
+    const line = selections.appendChild(createElement("li", {textContent: item}))
+  });  
+  wrapper.appendChild(selections);
+  wrapper.appendChild(createElement('button',{className:"done", textContent:"done"}))
+  const draggable=draggableComponentWrapper(wrapper);
+  return draggable;
+}
+function setMultiSelector(HTMLcomponent, selectedArray){
+  const inputs=HTMLcomponent.getElementsByClassName('li');
+  for (item of items){
+    if (selectedArray.includes(item.textContent)){
+      item.classList.add("selected");
+    }
+  }
+}
+function onRangeChange(r, f) {
+  // continuous control of slider thanks to https://stackoverflow.com/questions/18544890 ...Andrew Willems !
+  var n, c, m;
+  r.addEventListener("input", function(e) {
+    n = 1;
+    c = e.target.value;
+    if (c != m) f(e);
+    m = c;
+  });
+  r.addEventListener("change", function(e) {
+    if (!n) f(e);
+  });
+}
+function changeComponentProperty(e){
+  const instance=e.target.closest('.controlGroup').dataset.owner;
+  const property=e.target.dataset.property;
+  const value=Number(e.target.value);
+  const method=Environment[instance]["controls"][property];
+  method(value);
+}
+
+function selectOption(e){
+  const instance=e.target.closest('.controlGroup').dataset.owner;
+  const method=Environment[instance]["controls"][e.target.dataset.property];
+  const value=e.target.value;
+  console.log(instance, method, value);
+  method(value);
+}
+
+
+
+function makeSelector (name, values){
+  var componentName=name.replace (/[ ]/gi, "");
+  var wrap = createElement("div",{className:"controlGroup"});
+  var selector = createElement("select");
+  for (var i = 1; i < arguments.length; i++) {
+      let option = document.createElement("option");
+      option.value = arguments[i];
+      option.textContent = arguments[i];
+      selector.append(option);
+  }
+  console.log("componentName",componentName)
+  selector.onchange=selectOption;
+  selector.dataset.property=componentName;
+  groupLabel(wrap, name);
+  wrap.appendChild(selector);
+  document.body.appendChild(wrap);
+  return wrap;
+};
+
+
+const simpleFader = (owner, name) => {
+  const fader = createElement("div", { className: "fader" });
+  const slider = createElement("input", { type: "range",className:"slider" });
+  const faderWrapper = createElement("div", { className: "sliderWrapper" });
+  const label = createElement("span", { textContent: name });
+  slider.dataset.id = owner;
+  fader.appendChild(label);
+  fader.appendChild(faderWrapper);
+  faderWrapper.appendChild(slider);
+  return fader;
+};
+
+function faderGroup(owner, args) {
+  const instance = defaultInstance("controlGroup");
+  const controlGroup = createElement("div", { className: "controlGroup", id: instance});
+  for (element of arguments) {
+    if (element !== arguments[0]) {
+      controlGroup.appendChild(simpleFader(owner, element));
+    }
+  }
+  return controlGroup;
+}
+function setFaderGroup(faderGroup, faderSettings) {
+  const groupId = faderGroup.id;
+  const rangeSettings = Object.keys(faderSettings);
+  const thisGroup = document.getElementById(groupId);
+  const faders = thisGroup.getElementsByTagName("input");
+  let index = 0;
+  for (slider of faders) {
+      const property=rangeSettings[index];
+      onRangeChange(slider, changeComponentProperty);
+      slider.dataset.property=property;
+    Object.assign(slider, faderSettings[property]);
+    index++;
+  }
+}
+
+function groupLabel(group, label) {
+  label = createElement("span", {
+    textContent: label,
+    className: "groupLabel"
+  });
+  group.prepend(label);
+}
+function setOwner(controlGroup, ownerComponent){
+    const instance= ownerComponent.instance ? ownerComponent.instance :
+    ownerComponent;
+    console.log(instance,controlGroup)
+    controlGroup.dataset.owner=instance;
+}
+
+
 
 const getAudioSamples=()=>{
   var audioSamples=document.getElementsByClassName("sample");  
@@ -124,7 +252,6 @@ const getAudioSamples=()=>{
     patchList.appendChild(audioDup);
   };
 }
-
 
 window.onload = function() {
   interact(".panel").draggable({
