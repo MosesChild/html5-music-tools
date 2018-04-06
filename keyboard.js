@@ -36,15 +36,16 @@ var notes = {
   ]
 };
 
-const nthroot = function(x, n) {
-  //if x is negative function returns NaN
-  return Math.exp(1 / n * Math.log(x));
-};
+
 
 const selectWholeKey = midinote =>
   document.querySelectorAll(`.key[data-midinote=${midinote}]`);
 
 const makeFreqTable = cents => {
+  const nthroot = function(x, n) {
+    //if x is negative function returns NaN
+    return Math.exp(1 / n * Math.log(x));
+  };
   // ready for tuning!
   var prevValue = 27.5;
   var root2 = nthroot(2, 12);
@@ -82,6 +83,7 @@ function noteReleased(target) {
   selectWholeKey(target.dataset.midinote).forEach(part =>
     part.classList.remove("pressed")
   );
+  releaseNote(target);
 }
 
 var makeKey = function(id, octaveNumber) {

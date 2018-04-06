@@ -209,8 +209,7 @@ function faderGroup(owner, args) {
 function setFaderGroup(faderGroup, faderSettings) {
   const groupId = faderGroup.id;
   const rangeSettings = Object.keys(faderSettings);
-  const thisGroup = document.getElementById(groupId);
-  const faders = thisGroup.getElementsByTagName("input");
+  const faders = faderGroup.getElementsByTagName("input");
   let index = 0;
   for (slider of faders) {
       const property=rangeSettings[index];
