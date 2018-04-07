@@ -1,41 +1,78 @@
 var audioContext = audioContext ? audioContext : new AudioContext;
 
-function makeSynthInterface(){
-    const wrapper=createElement('div');
-    makeSelector( "waveform", "sine", "triangle", "sawtooth", "square" );
-}
+const makeSynthInterface=()=>({
+  waveSelector: makeSelector( "waveform", "sine", "triangle", "sawtooth", "square" ),
+  fader: simpleFader()
+});
 
+function doIt(array, callback){
+    array.forEach(element=>callback(element))
+};
 
-const voiceFactory=(objects, count)=>{
-    const voices=[];
-    const masterVolume=audioContext.createGain();
-    for (let i=0; i<count; i++){
-        const voice = audioContext.createOscillator();
-        const adsr = makeADSR();
-        voice.connect(adsr.gain);
-    }
-}
-
-const makeSynth=()=>({
-    instance: defaultInstance("synth"),
-    interface: makeSynthInterface(),
-    voices: new Array(8).forEach(element => makeVoice("sine")),
+const makeVoice =()=> ({
+    osc: audioContext.createOscillator(),
+    adsr: makeADSR(),
+    note(frequency){
+        this.osc.frequency.setValueAtTime(frequency,audioContext.currentTime);
+        console.log("note", this.osc.frequency.value, frequency);
+        this.adsr.trigger();
+    },
+    release(){
+        this.adsr.triggerRelease();
+    },
     init(){
-        Environment[this.instance]=this; 
+        voice.osc.disconnect();
+        voice.osc.connect(voice.adsr.gain);
+        voice.osc.start();
+        console.log("voice initialized!");
+    }
+});
+const voiceFactory=(count)=>{
+    const voices=[];
+    for (let i=0; i<count; i++){
+        voice=makeVoice();
+        voice.init();
+        voices.push(voice);
+    }
+    return voices;
+}
+
+function wrapChildren(...args){
+    const wrapper=createElement('div');   
+    args.forEach(component=>wrapper.appendChild(component));
+    return wrapper;
+}
+function wrapInterface(interface){
+    const wrapper=createElement('div'); 
+    const args=Object.entries(interface);  
+    args.forEach(component=>{
+        wrapper.appendChild(component[1]);
+    });
+    return wrapper;
+}
+
+const makeSynth=(instance=defaultInstance("synth"))=>({
+    masterVolume: audioContext.createGain(),
+    interface: makeSynthInterface(),
+    voices: voiceFactory(8),
+    init(){
+        // document.body.appendChild(wrapper);
+    //    masterVolume.connect(audioContext.destination)
+    console.log("synth init", this.voices[0]);
+        Environment[this.instance]=this ;
         //setOwner(this.interface, this.instance);
     }
 });
 
 makeKeyboard(5);
 const lfo=makeLFO();
-lfo.init();
 
+lfo.init();
+/*
 const adsr=makeADSR();
 adsr.init();
-/*
+
 lfo.osc.connect(lfo.gain);
-
-
 const carrier=audioContext.createOscillator();
 
 carrier.connect(adsr.gain);
@@ -45,17 +82,18 @@ lfo.gain.connect(carrier.frequency);
 synth=makeSynth();
 synth.init();
 
-adsr.gain.connect(audioContext.destination)
+//adsr.gain.connect(audioContext.destination)
 
 
 function playNote(frequency) {
-    console.log(frequency);
-    carrier.frequency.setValueAtTime(frequency, audioContext.currentTime);
-    adsr.trigger();
+    console.log("playNote", frequency);
+    synth.voices[0].note(frequency);
+    //adsr.trigger();
 }
 
 function releaseNote(frequency){
+    synth.voices[0].release();
     //carrier.gain.setValueAtTime(0, audioContext.currentTime)
-    console.log()
-    adsr.triggerRelease();
+
+    //adsr.triggerRelease();
 }

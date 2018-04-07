@@ -17,6 +17,7 @@ const createElement = (element, attributesObj) => {
   }
   return newElement;
 };
+
 const draggableComponentWrapper = (component, instance) => {
   const wrapper = createElement("div", { className: "wrapper" });
   const topPanel = createElement("div", { className: "topPanel" });
@@ -41,7 +42,6 @@ const draggableComponentWrapper = (component, instance) => {
     textContent: "drag_handle"
   });
 
-  // hook still needed for menus!
   const cname = component.className;
   if (defaultSizes[cname]) {
     wrapper.style.width = defaultSizes[cname].width;
@@ -184,30 +184,33 @@ function makeSelector (name, values){
 };
 
 
-const simpleFader = (owner, name) => {
+const simpleFader = (name) => {
   const fader = createElement("div", { className: "fader" });
   const slider = createElement("input", { type: "range",className:"slider" });
   const faderWrapper = createElement("div", { className: "sliderWrapper" });
   const label = createElement("span", { textContent: name });
-  slider.dataset.id = owner;
   fader.appendChild(label);
   fader.appendChild(faderWrapper);
   faderWrapper.appendChild(slider);
   return fader;
 };
-
-function faderGroup(owner, args) {
-  const instance = defaultInstance("controlGroup");
-  const controlGroup = createElement("div", { className: "controlGroup", id: instance});
-  for (element of arguments) {
-    if (element !== arguments[0]) {
-      controlGroup.appendChild(simpleFader(owner, element));
-    }
-  }
-  return controlGroup;
+const makeFaderGroup = ([faderSettings, ...args]) => {
+  console.log("makeFaderGroup", faderSettings);
+  
+  const faders=faderGroup(...args);
+  console.log(faders);
+  setFaderGroup(faders, faderSettings);
+  return faders;
 }
+
+
+function faderGroup(...args) {
+  const controlGroup = createElement("div", { className: "controlGroup", id: defaultInstance("controlGroup")});
+  args.forEach(element=> controlGroup.appendChild( simpleFader( element ) ) );
+  return controlGroup;
+};
+
 function setFaderGroup(faderGroup, faderSettings) {
-  const groupId = faderGroup.id;
   const rangeSettings = Object.keys(faderSettings);
   const faders = faderGroup.getElementsByTagName("input");
   let index = 0;

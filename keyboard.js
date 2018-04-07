@@ -76,7 +76,7 @@ function keyPressed(target) {
   selectWholeKey(target.dataset.midinote).forEach(
     part => (part.className += " pressed")
   );
-  playNote(target);
+  playNote(target.dataset.frequency);
 }
 
 function noteReleased(target) {

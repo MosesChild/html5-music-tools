@@ -5,18 +5,20 @@ const LFOSettings = {
     amount: { value: 100, min: 0, max: 100, step: 1 },
   };
 
-const makeLFOinterface = () => {
-  //  const LFOselect = makeSelector ("LFO type","vibrato","tremolo","both","none");
+
+const makeLFOinterface = (lfo) => {
+    //const LFOselect = makeSelector ("LFO type","vibrato","tremolo","both","none");
+    const scope=lfo.scope.interface;
+    const label= createElement("span", {textContent: "LFO", className: "groupLabel"} );
     const lfoWaveform = makeSelector( "waveform", "sine", "triangle", "sawtooth", "square", "custom");
-    const lfoFaderGroup = faderGroup("LFO", "Frequency","Amount");
-    const wrapper=createElement("div",{className:"LFO"});
-  //  wrapper.appendChild(LFOselect);
-    wrapper.appendChild(lfoWaveform);
-    wrapper.appendChild(lfoFaderGroup);
-    groupLabel(lfoFaderGroup, "LFO");
-    document.body.appendChild(wrapper);
-    setFaderGroup(lfoFaderGroup, LFOSettings);
-    return wrapper;
+    const lfoFaderGroup = makeFaderGroup([LFOSettings,"Frequency","Amount"]);
+    var interface= wrapChildren(scope,label, lfoWaveform, lfoFaderGroup);
+    let controlGroup=interface.getElementsByClassName("controlGroup");
+    setOwner(lfoWaveform,lfo);
+    setOwner(lfoFaderGroup,lfo);
+    interface=draggableComponentWrapper( interface, lfo.instance );
+    document.body.appendChild(interface);
+    return interface;
 }
 
 const lfoControls=(lfo)=> ({
@@ -29,38 +31,30 @@ const lfoControls=(lfo)=> ({
         LFOtype(e){lfo.osc.frequency.type=e },
         waveform(e){lfo.osc.type=e; },
 });
-const makeLFO=() => ({
+
+
+const makeLFO=(instance=defaultInstance("LFO"), makeInterface=true ) => ({
         name: "LFO",
-        scope: makeScope(),
-        instance: defaultInstance("LFO"),
-        interface: makeLFOinterface(),
+        instance: instance,
         osc: audioContext.createOscillator(),
         gain: audioContext.createGain(),
         state:"vibrato",/*
         frequency: LFOSettings.frequency.value,
         amount: LFOSettings.amount.value,
+
 */
         init(){
             Environment[this.instance]=this;
-            this.interface.prepend(this.scope.canvas);
-            this.interface=draggableComponentWrapper(this.interface, this.instance);
-            document.body.appendChild(this.interface);
-            this.controls= lfoControls(this);
-            this.inputs={"frequency":this.osc.frequency,"detune":this.osc.detune, "gain":this.gain},
-            this.outputs= {"osc": this.osc, "gain": this.gain};
             this.osc.connect(this.gain);
-            this.osc.connect(this.scope.analyser);
-            
-            console.log("setOwner", this);
-            let controlGroup=this.interface.getElementsByClassName("controlGroup");
-            for (control of controlGroup){
-                console.log(control, this)
-                setOwner(control, this);
-            }
+            this.controls= lfoControls(this);
             this.osc.frequency.value = 3;
             this.osc.type = "sine";
             this.gain.gain.value = 100;            
-            this.osc.start();
+            this.osc.start();            
+            if (makeInterface===true){
+            this.scope=makeScope(this.gain);
+            this.interface=makeLFOinterface(this,this.scope.interface);
+            } 
         },
         disconnect(destination){
 
@@ -77,7 +71,7 @@ const makeLFO=() => ({
 
 const connect=(source,destination)=>{
     if (source instanceof AudioNode&& destination instanceof AudioNode){
-        Environment.connections.push()
+        Environment.connections.push();
         source.connect(destination);
     }
 }

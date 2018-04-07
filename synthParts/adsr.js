@@ -10,7 +10,7 @@ const adsrSettings = { // for initialization only!
 
   function envelope (destination, value, delay, attackDuration, decayDuration, sustain){
     var time=audioContext.currentTime;
-    console.log(destination, time, attackDuration);
+   // console.log(destination, time, attackDuration);
     // destination.setValueAtTime(0, time);
      destination.cancelScheduledValues(time+delay);
      destination.linearRampToValueAtTime(value, (time + delay + attackDuration));
@@ -112,12 +112,11 @@ function makeTrigger(destination){
 function addADSRinterface(adsr){
     const instance=adsr.instance;
     const trigger=makeTrigger(adsr.instance); 
-    const faders = faderGroup("ADSR",/*"Amount",*/ "Delay", "Att",  "Dec", "Sus", "Rel");
+    const faders = makeFaderGroup([adsrSettings,"Delay", "Att",  "Dec", "Sus", "Rel"]);
     const display=createElement("canvas",{className: "adsr_display"})
     var wrapper = createElement("div", {className:"adsr"});
     adsr.adsrDisplay=adsrDisplay.bind(adsr);
     groupLabel(faders,"ADSR");
-    setFaderGroup(faders, adsrSettings);
     setOwner(faders, instance);
     wrapper.appendChild(trigger.triggerPad);
     wrapper.appendChild(display);
@@ -158,16 +157,6 @@ const makeADSR=() => ({
         if (controls){
             addADSRinterface(this);
         }
-    },
-    //initFaderGroup(){setFaderGroup(interface, adsrSettings)},
-    disconnect(destination){
-        // should show connections!
-        disconnect(destination, this.instance)
-    },
-    connect(){
-        // should show all destinations with checkboxes for connections!
-        //const allDestinations;
-        this.gain.connect(destination,this.instance);
     },
     trigger(){
         envelope( this.gain.gain, this.amount, this.delay, this.attack, this.decay, this.sustain);
