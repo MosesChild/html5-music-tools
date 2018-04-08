@@ -8,7 +8,7 @@ const LFOSettings = {
 
 const makeLFOinterface = (lfo) => {
     //const LFOselect = makeSelector ("LFO type","vibrato","tremolo","both","none");
-    const scope=lfo.scope.interface;
+    const scope=lfo.scope.wrapper;
     const label= createElement("span", {textContent: "LFO", className: "groupLabel"} );
     const lfoWaveform = makeSelector( "waveform", "sine", "triangle", "sawtooth", "square", "custom");
     const lfoFaderGroup = makeFaderGroup([LFOSettings,"Frequency","Amount"]);
@@ -22,7 +22,7 @@ const makeLFOinterface = (lfo) => {
 }
 
 const lfoControls=(lfo)=> ({
-        amount(e){lfo.gain.gain.value = e},
+        amount(e){lfo.gain.gain.value = e;},
         frequency(e){lfo.osc.frequency.setValueAtTime(e, audioContext.currentTime) },
         attack(e){ lfo.attack=e;},
         decay(e){lfo.decay=e;},
@@ -34,7 +34,6 @@ const lfoControls=(lfo)=> ({
 
 
 const makeLFO=(instance=defaultInstance("LFO"), makeInterface=true ) => ({
-        name: "LFO",
         instance: instance,
         osc: audioContext.createOscillator(),
         gain: audioContext.createGain(),
@@ -52,16 +51,10 @@ const makeLFO=(instance=defaultInstance("LFO"), makeInterface=true ) => ({
             this.gain.gain.value = 100;            
             this.osc.start();            
             if (makeInterface===true){
-            this.scope=makeScope(this.gain);
-            this.interface=makeLFOinterface(this,this.scope.interface);
+            this.scope=makeScope(this.osc,this.oscAmount);
+            this.scope.init();
+            this.interface=makeLFOinterface(this,this.scope.wrapper);
             } 
-        },
-        disconnect(destination){
-
-        },
-        connection(destination){
-            console.log("connecting", destination);
-            this.gain.connect(destination);
         },
         toString: function () {
             return "freq="+this.osc.frequency.value.toFixed(1) +

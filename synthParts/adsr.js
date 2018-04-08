@@ -1,12 +1,13 @@
 
 const adsrSettings = { // for initialization only!
    // amount: { value: 1, min: 0, max: 1, step: 0.01 },
-    delay: {value: 0, min: 0, max: 5, step: 'any'},
+    delay: {value: 0, min: 0, max: 5, step: .05},
     attack: { value: 0.01, min: 0, max: 5, step: 0.01 },
     decay: { value: 0.2, min: 0, max: 5, step: 0.01 },
     sustain: { value: 0.8, min: 0, max: 1, step: 0.01 },
     release: { value: 0.5, min: 0, max: 5, step: 0.05 }
   };
+
 
   function envelope (destination, value, delay, attackDuration, decayDuration, sustain){
     var time=audioContext.currentTime;
@@ -26,17 +27,17 @@ const adsrSettings = { // for initialization only!
     destination.linearRampToValueAtTime(0, (time + releaseTime));
  }
 
- function adsrDisplay(vals){
-    const time=[this.delay, this.attack, this.decay, this.release];
+ const adsrDisplay=(canvas)=>{
+     time=[this.delay, this.attack, this.decay, this.release]
     const peak=0; yZero=150;// to make easier to read the flipped y.
     //flip y coordinate (sustain) by subtracting from height;
     const sustain=150-this.sustain*150;
-    const ctx= this.display.getContext("2d");
+    const ctx = canvas.getContext("2d");
     var totalTime=time.reduce((accum,time)=>accum+time);
     var sustainLength=totalTime*0.2;
     const showSeconds=Math.floor(totalTime+sustainLength)+1;
-    console.log(totalTime,sustainLength, showSeconds)
-
+    //console.log(totalTime,sustainLength, showSeconds)
+    sustainLength=showSeconds-totalTime;
     time.splice(2, 0, sustainLength);
     // add 20% to display sustain...
     
@@ -44,8 +45,8 @@ const adsrSettings = { // for initialization only!
     var unitTime=time.map(t=>t=t*unit);
     var delay=unitTime[0], attack=unitTime[1], decay=unitTime[2], 
         sustainLength=unitTime[3],release=unitTime[4];
-    console.log(unitTime, totalTime);
-    console.log(sustain)
+    //console.log(unitTime, totalTime);
+    //console.log(sustain)
 
     // clear previous vals
     ctx.fillStyle = 'black';
@@ -61,10 +62,23 @@ const adsrSettings = { // for initialization only!
             ctx.stroke();
             ctx.fillStyle= 'rgb(255,176,0)'
             ctx.fillText(tick+"s",unit*tick+3, 145)
-            console.log("unit,tick",unit,tick)
-    }
-})();
-ctx.strokeStyle ='rgb(255,176,0)';
+       //     console.log("unit,tick",unit,tick)
+        }
+    })();
+        // show important values!
+        let x_offset=240;
+        let y_offset= this.delay>0 ? 10 : 0;
+        ctx.fillStyle= 'rgb(255,176,0)'
+
+    ctx.fillText("delay "+this.delay, x_offset, y_offset-2);
+
+    ctx.fillText("attack "+this.attack, x_offset, y_offset+12);
+    ctx.fillText("decay "+this.decay, x_offset, y_offset+24);
+    ctx.fillText("sustain "+this.sustain, x_offset, y_offset+36);
+    ctx.fillText("release "+this.release, x_offset, y_offset+48);
+        
+
+    ctx.strokeStyle ='rgb(255,176,0)';
     
     
     ctx.lineWidth = 2;
@@ -76,7 +90,7 @@ ctx.strokeStyle ='rgb(255,176,0)';
     ctx.lineTo(delay+attack+decay, sustain);
     ctx.lineTo(delay+attack+decay+sustainLength, sustain)
     ctx.lineTo(delay+attack+decay+sustainLength+release, yZero);
- //   ctx.closePath();
+
     ctx.stroke();
 }
 
@@ -109,11 +123,29 @@ function makeTrigger(destination){
 }
 
 
-function addADSRinterface(adsr){
+const ADSRinterface={interface: {
+    trigger: makeTrigger(), 
+    faders: makeFaderGroup([adsrSettings,"Delay", "Att",  "Dec", "Sus", "Rel"]),
+    display: createElement("canvas",{className: "adsr_display"}),
+    wrapper: createElement("div", {className:"adsr"})
+    },
+    initInterface(){
+        const r=this.interface;
+        setOwner(r.faders, this.instance);
+        groupLabel(r.faders,"ADSR");
+        r.wrapper.appendChild(r.trigger.triggerPad);
+        r.wrapper.appendChild(r.display);
+        r.wrapper.appendChild(r.faders);
+        r.wrapper=draggableComponentWrapper(r.wrapper,this.instance);
+        document.body.appendChild(r.wrapper);
+    }
+}
+/*
+function makeADSRinterface(adsr){
     const instance=adsr.instance;
     const trigger=makeTrigger(adsr.instance); 
     const faders = makeFaderGroup([adsrSettings,"Delay", "Att",  "Dec", "Sus", "Rel"]);
-    const display=createElement("canvas",{className: "adsr_display"})
+    const display=createElement("canvas",{className: "adsr_display"});
     var wrapper = createElement("div", {className:"adsr"});
     adsr.adsrDisplay=adsrDisplay.bind(adsr);
     groupLabel(faders,"ADSR");
@@ -126,44 +158,42 @@ function addADSRinterface(adsr){
     Environment[instance]= Object.assign(adsr, {interface: wrapper, display: display});
     return Environment[instance];
 }
+*/
 
-
-const ADSR_listeners=(adsr)=> ({
-    amount(e){adsr.adsrDisplay(); adsr.gain.gain.value = e},
-    // not strictly necessary... this control is overriding vca,
-    // instead it should be changing the scale of the output...   
-    attack(e){adsr.adsrDisplay(); adsr.attack=e;},
-    delay(e){adsr.adsrDisplay(); adsr.delay=e},
-    decay(e){adsr.adsrDisplay(); adsr.decay=e;},
-    sustain(e){adsr.adsrDisplay(); adsr.sustain=e;},
-    release(e){adsr.adsrDisplay(); adsr.release=e;},
+const master_ADSR_listeners =(canvas)=> ({
+    amount(e){ this.gain.gain.value = e; adsrDisplay(canvas);},
+    attack(e){ this.attack=e; adsrDisplay(canvas); },
+    delay(e){ this.delay=e; adsrDisplay(canvas); },
+    decay(e){ this.decay=e; adsrDisplay(canvas); },
+    sustain(e){this.sustain=e; adsrDisplay(canvas); },
+    release(e){this.release=e; adsrDisplay(canvas); }
 });
 
-const makeADSR=() => ({
+const makeADSR= (interface=false, instance=defaultInstance("adsr")) => ({
     gain: audioContext.createGain(),
-    instance: defaultInstance("adsr"),
+    instance: instance,
     amount: 1, //adsrSettings["amount"].value,
     delay: adsrSettings.delay.value,
     attack: adsrSettings.attack.value,
     decay: adsrSettings.decay.value,
     sustain: adsrSettings.sustain.value,
     release: adsrSettings.release.value,
-    inputs: {"gain":this.gain},
-    outputs: {"gain":this.gain, "connected":[]},
-
-    init(controls=true){
+    init(){
         Environment[this.instance]=this;
-        this.controls=ADSR_listeners(this);
-        if (controls){
-            addADSRinterface(this);
+        if (interface){
+            Object.assign(this, ADSRinterface);
+            this.initInterface();
+            this.controls=master_ADSR_listeners(this.interface.display);
+            this.adsrDisplay = adsrDisplay.bind(this);
         }
+        
+        
     },
     trigger(){
         envelope( this.gain.gain, this.amount, this.delay, this.attack, this.decay, this.sustain);
     },
     triggerRelease(){ envelopeRelease( this.gain.gain, this.release ) },
 });
-
 
 
 

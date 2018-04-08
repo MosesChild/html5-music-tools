@@ -149,11 +149,26 @@ function onRangeChange(r, f) {
 function changeComponentProperty(e){
   const instance=e.target.closest('.controlGroup').dataset.owner;
   const property=e.target.dataset.property;
-  const value=Number(e.target.value);
+  const max=e.target.max;
+  //console.log("max",max);
+  // this value could get curve here!
+  const value=faderCurve(Number(e.target.value), max);
   const method=Environment[instance]["controls"][property];
   method(value);
 }
+function faderCurve(value, multiplier=5, steep=10){ 
+  value=value/multiplier;
+  var x=Math.pow(value, 5) * multiplier;
+  console.log("fader curve value", value, x)
+  return x;
 
+  
+  //steep>=2 and assumes value 0-100...outputs 0-1
+  var coFactor=steep-1;
+ // value=value/100
+  var gain=multiplier*(Math.pow(10,steep)*value-1)/coFactor//  10^(x)-1)/9
+  return gain;
+}
 function selectOption(e){
   const instance=e.target.closest('.controlGroup').dataset.owner;
   const method=Environment[instance]["controls"][e.target.dataset.property];
@@ -196,7 +211,7 @@ const simpleFader = (name) => {
 };
 const makeFaderGroup = ([faderSettings, ...args]) => {
   console.log("makeFaderGroup", faderSettings);
-  
+
   const faders=faderGroup(...args);
   console.log(faders);
   setFaderGroup(faders, faderSettings);

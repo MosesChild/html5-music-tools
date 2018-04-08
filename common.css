@@ -21,12 +21,16 @@ button {
     width:100%;
 }
 .scope_wrapper{
-    width: 300px;
-    height: 150px;
+    max-width: 300px;
+    max-height: 150px;
 }
 .scope{
     width:100%;
     height: 100%;
+}
+.over {
+    position: absolute;
+    z-index: 10;
 }
 /* Customization to limit height of the menu */
 .custom-restricted {
@@ -106,11 +110,9 @@ button {
     flex: 1 1 100%;
 }
 .trigger {
-    flex: 0 0 50px;
-    order: 1;
-    margin-left: 20px;
-    align-self: center;
+    margin: 20px;
     background-color: white;
+    width: 50px;
     height: 50px;
     border: 2px solid lightseagreen;
 }

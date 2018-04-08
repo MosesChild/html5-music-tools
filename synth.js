@@ -1,31 +1,13 @@
 var audioContext = audioContext ? audioContext : new AudioContext;
 
-const makeSynthInterface=()=>({
+const makeSynthInterface=(master)=>({
   waveSelector: makeSelector( "waveform", "sine", "triangle", "sawtooth", "square" ),
-  fader: simpleFader()
-});
-
-function doIt(array, callback){
-    array.forEach(element=>callback(element))
-};
-
-const makeVoice =()=> ({
-    osc: audioContext.createOscillator(),
-    adsr: makeADSR(),
-    note(frequency){
-        this.osc.frequency.setValueAtTime(frequency,audioContext.currentTime);
-        console.log("note", this.osc.frequency.value, frequency);
-        this.adsr.trigger();
-    },
-    release(){
-        this.adsr.triggerRelease();
-    },
-    init(){
-        voice.osc.disconnect();
-        voice.osc.connect(voice.adsr.gain);
-        voice.osc.start();
-        console.log("voice initialized!");
-    }
+  masterADSR: makeADSR(),
+  fader: simpleFader(),
+  init(){
+    setOwner(this.waveSelector, master);
+    setOwner(this.adsr, master)
+  }
 });
 const voiceFactory=(count)=>{
     const voices=[];
@@ -36,6 +18,51 @@ const voiceFactory=(count)=>{
     }
     return voices;
 }
+function doIt(array, callback){
+    array.forEach(element=>callback(element))
+};
+
+const makeVoice =(instance="voice")=> ({
+    instance: instance,
+    osc: audioContext.createOscillator(),
+    gain: audioContext.createGain(), //makeADSR(),
+    trigger(){
+        this.adsr.trigger();
+    },
+    release(){
+        this.adsr.triggerRelease();
+    },
+    init(){
+       // Environment[this.instance]=this;
+      //  this.osc.disconnect();
+     //   const interface = makeADSRinterface();
+     //   document.body.appendChild(interface);
+     console.log(this)
+        this.osc.connect(this.gain);
+        this.osc.start();
+        this.osc.frequency.value= 120;
+        console.log("voice initialized!", this);
+    }
+});
+
+const makeSynth=(instance=defaultInstance("synth"))=>({
+    instance: instance,
+    masterVolume: audioContext.createGain(),
+    adsr: makeADSR(),
+    voices: voiceFactory(8),
+    init(){
+        this.adsr.init();
+        this.interface= makeSynthInterface(this);
+        this.interface.init();
+
+        document.body.appendChild(this.interface);
+    //    masterVolume.connect(audioContext.destination)
+    console.log("synth init", this.voices[0]);
+        Environment[this.instance]=this ;
+        //setOwner(this.interface, this.instance);
+    }
+});
+
 
 function wrapChildren(...args){
     const wrapper=createElement('div');   
@@ -51,25 +78,16 @@ function wrapInterface(interface){
     return wrapper;
 }
 
-const makeSynth=(instance=defaultInstance("synth"))=>({
-    masterVolume: audioContext.createGain(),
-    interface: makeSynthInterface(),
-    voices: voiceFactory(8),
-    init(){
-        // document.body.appendChild(wrapper);
-    //    masterVolume.connect(audioContext.destination)
-    console.log("synth init", this.voices[0]);
-        Environment[this.instance]=this ;
-        //setOwner(this.interface, this.instance);
-    }
-});
+
 
 makeKeyboard(5);
-const lfo=makeLFO();
+var adsr=makeADSR(true);
 
-lfo.init();
+adsr.init();
+
 /*
-const adsr=makeADSR();
+
+const adsr=makeADSR(true);
 adsr.init();
 
 lfo.osc.connect(lfo.gain);
@@ -78,22 +96,28 @@ const carrier=audioContext.createOscillator();
 carrier.connect(adsr.gain);
 carrier.start();
 lfo.gain.connect(carrier.frequency);
-*/
-synth=makeSynth();
-synth.init();
 
+//synth=makeSynth();
+//synth.init();
+const voice=makeVoice();
+voice.init();
+Object.assign(voice, ADSRinterface);
+voice.interface.init();
+
+*/
 //adsr.gain.connect(audioContext.destination)
 
 
 function playNote(frequency) {
     console.log("playNote", frequency);
-    synth.voices[0].note(frequency);
+    voice.osc.frequency.value=frequency;
+    voice.trigger();
+   // synth.voices[0];
     //adsr.trigger();
 }
 
 function releaseNote(frequency){
-    synth.voices[0].release();
-    //carrier.gain.setValueAtTime(0, audioContext.currentTime)
-
+   // synth.voices[0].release();
+    //carrier.gain.setValueAtTime(0, audioContext.currentTime);
     //adsr.triggerRelease();
-}
+};
