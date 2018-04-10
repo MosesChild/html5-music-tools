@@ -4,6 +4,7 @@ var audioContext = audioContext ? audioContext : new AudioContext;
 
 
 const makeScope= (audioNode, instance=defaultInstance("scope") ) =>({
+    component: "scope",
     instance: instance,
     input: audioNode,
     wrapper: createElement("div", { className: "scope_wrapper", id: instance+"_wrapper" }),
@@ -46,7 +47,7 @@ const makeScope= (audioNode, instance=defaultInstance("scope") ) =>({
     const analyser=audioContext.createAnalyser(); 
     const canvas=this.canvas;
     this.input.connect(analyser);       
-    var canvasCtx = this.canvas.getContext("2d");
+    var canvasCtx = canvas.getContext("2d");
     var bufferLength = analyser.frequencyBinCount;
     var dataArray = new Uint8Array(bufferLength);
     draw();

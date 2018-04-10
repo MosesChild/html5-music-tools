@@ -1,11 +1,21 @@
-//Make the DIV element draggagle:
-const Environment ={connections:[]};
+const Environment={};
 
-const defaultInstance = componentName => {
-  const component = document.getElementsByClassName(componentName);
-  const instanceName=componentName + component.length;
-  return instanceName;
-};
+
+// call this registerInstance,
+const defaultInstance = (instance="unknown") => {
+  const instanceNumber=Environment[instance] ? Environment[instance].length : 0;
+  if (Environment[instance]){
+    while (Environment[instance][instance+instanceNumber]){
+      instance+instanceNumber++;
+    }
+  }
+  return instance+instanceNumber;
+}
+const registerComponent=(component)=>{
+  Environment[component.component]? 
+    Environment[component.component][component.instance]=component
+    : Environment[component.component] = { [ component.instance ] : component }
+}
 
 const createElement = (element, attributesObj) => {
   var newElement = document.createElement(element);
@@ -147,31 +157,36 @@ function onRangeChange(r, f) {
   });
 }
 function changeComponentProperty(e){
-  const instance=e.target.closest('.controlGroup').dataset.owner;
+  const componentInfo=e.target.closest('.controlGroup')
+  const component=componentInfo.dataset.component;
+  const instance=componentInfo.dataset.owner;
   const property=e.target.dataset.property;
+  
   const max=e.target.max;
   //console.log("max",max);
+  //const value=Number(e.target.value)
   // this value could get curve here!
   const value=faderCurve(Number(e.target.value), max);
-  const method=Environment[instance]["controls"][property];
+  const method=Environment[component][instance]["controls"][property];
   method(value);
 }
-function faderCurve(value, multiplier=5, steep=10){ 
-  value=value/multiplier;
-  var x=Math.pow(value, 5) * multiplier;
-  console.log("fader curve value", value, x)
-  return x;
 
-  
+function faderCurve(value, max, steep=10){
+  value=value/max;
+  var x=Number((Math.pow(value, 2) * max).toFixed(7));
+  return x
+  //console.log("fader curve value", value, x)
+
   //steep>=2 and assumes value 0-100...outputs 0-1
   var coFactor=steep-1;
  // value=value/100
   var gain=multiplier*(Math.pow(10,steep)*value-1)/coFactor//  10^(x)-1)/9
   return gain;
 }
+
 function selectOption(e){
   const instance=e.target.closest('.controlGroup').dataset.owner;
-  const method=Environment[instance]["controls"][e.target.dataset.property];
+  const method=Environment[type][instance]["controls"][e.target.dataset.property];
   const value=e.target.value;
   console.log(instance, method, value);
   method(value);
@@ -220,7 +235,7 @@ const makeFaderGroup = ([faderSettings, ...args]) => {
 
 
 function faderGroup(...args) {
-  const controlGroup = createElement("div", { className: "controlGroup", id: defaultInstance("controlGroup")});
+const controlGroup = createElement("div", { className: "controlGroup", /*id: defaultInstance("controlGroup")*/});
   args.forEach(element=> controlGroup.appendChild( simpleFader( element ) ) );
   return controlGroup;
 };
@@ -245,11 +260,10 @@ function groupLabel(group, label) {
   });
   group.prepend(label);
 }
-function setOwner(controlGroup, ownerComponent){
-    const instance= ownerComponent.instance ? ownerComponent.instance :
-    ownerComponent;
-    console.log(instance,controlGroup)
+function setOwner(controlGroup, component, instance){
+    console.log(instance,controlGroup);
     controlGroup.dataset.owner=instance;
+    controlGroup.dataset.component=component;
 }
 
 
@@ -327,3 +341,5 @@ $ = selector => {
     return nodeList;
   }
 };
+
+

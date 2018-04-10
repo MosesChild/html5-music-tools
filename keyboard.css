@@ -1,8 +1,4 @@
-.wrapper {
-    display: flex;
-    flex-direction: column;
-    margin: 10px;
-}
+
 .keyboard {
     flex: 1 1 1%;
     box-shadow: inset -1px 0px black;

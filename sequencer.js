@@ -29,7 +29,7 @@ const makeSeqPanel =( bpm, timeSigTop, timeSigBottom, ButtonEventHandler1, Butto
 };
 
 
-const makeSequencer = ({
+export const makeSequencer = ({
   instance = defaultInstance("sequencer"),
   bpm = 120,
   timeSigTop = 4,

@@ -1,8 +1,9 @@
-var audioContext = audioContext ? audioContext : new AudioContext;
 
+var audioContext = audioContext ? audioContext : new AudioContext;
+/*
 const makeSynthInterface=(master)=>({
   waveSelector: makeSelector( "waveform", "sine", "triangle", "sawtooth", "square" ),
-  masterADSR: makeADSR(),
+  masterADSR: makeADSR,
   fader: simpleFader(),
   init(){
     setOwner(this.waveSelector, master);
@@ -21,26 +22,67 @@ const voiceFactory=(count)=>{
 function doIt(array, callback){
     array.forEach(element=>callback(element))
 };
+*/
+const ConstantSource=(instance="constantSource")=>{
+    const constantSource = audioContext.createConstantSource();
+    const source= {
+    component: "constantSource",
+    instance: defaultInstance(instance),
+    output: constantSource,
+    set input(e){this.output.offset.value=e}
+    }
+    constantSource.start();
+    return source;
+  //  Environment[source.component][source.instance]=source;
+};
 
-const makeVoice =(instance="voice")=> ({
-    instance: instance,
+const makeSources=(object)=>{
+    const sources={};
+    const keys=Object.keys(object);
+    keys.forEach(key=> sources[key]=ConstantSource(key));
+    return sources;
+}
+
+
+const makeMasterVoice =(instance="voice")=> ({
+    instance: defaultInstance(instance),
+    component: "voice",
     osc: audioContext.createOscillator(),
-    gain: audioContext.createGain(), //makeADSR(),
+    vcaInterface: {...ADSRinterface},
+    portamentoTime: 0.01,
+    controls: {vca: makeSources(adsrSettings)},
+    adsr: makeADSR({interface:true}),
+
+    moreControls: {
+        
+       portamento(e){this.portamentoTime(e)},
+     //  delay(e){this.adsr.interface},
+    },
+    note(frequency){
+        this.osc.frequency.cancelScheduledValues(audioContext.currentTime)
+        this.osc.frequency.setTargetAtTime(Number(frequency), audioContext.currentTime,this.portamentoTime,);
+       // this.adsr.trigger();
+    },
     trigger(){
-        this.adsr.trigger();
+       // this.adsr.trigger.call(adsr);
     },
     release(){
-        this.adsr.triggerRelease();
+      //  this.adsr.triggerRelease();
     },
     init(){
-       // Environment[this.instance]=this;
-      //  this.osc.disconnect();
-     //   const interface = makeADSRinterface();
-     //   document.body.appendChild(interface);
-     console.log(this)
-        this.osc.connect(this.gain);
+        registerComponent(this);
+      //  console.log("adsr",this.adsr);
+     //   this.adsr.init();
+      //  this.osc.connect(this.adsr.gain);
+        
+       // setFaderGroup()
+        
+        this.vcaInterface.initInterface();
+
+       // this.osc.connect(this.adsr.gain);
         this.osc.start();
-        this.osc.frequency.value= 120;
+      //  this.adsr.gain.connect(audioContext.destination);
+
         console.log("voice initialized!", this);
     }
 });
@@ -54,7 +96,6 @@ const makeSynth=(instance=defaultInstance("synth"))=>({
         this.adsr.init();
         this.interface= makeSynthInterface(this);
         this.interface.init();
-
         document.body.appendChild(this.interface);
     //    masterVolume.connect(audioContext.destination)
     console.log("synth init", this.voices[0]);
@@ -79,45 +120,27 @@ function wrapInterface(interface){
 }
 
 
+Module.makeKeyboard(5)
 
-makeKeyboard(5);
-var adsr=makeADSR(true);
 
-adsr.init();
-
-/*
-
-const adsr=makeADSR(true);
-adsr.init();
-
-lfo.osc.connect(lfo.gain);
-const carrier=audioContext.createOscillator();
-
-carrier.connect(adsr.gain);
-carrier.start();
-lfo.gain.connect(carrier.frequency);
-
-//synth=makeSynth();
-//synth.init();
-const voice=makeVoice();
+const voice=makeMasterVoice();
 voice.init();
-Object.assign(voice, ADSRinterface);
-voice.interface.init();
-
+//voice.gain.connect(audioContext.destination)
+/*
+const constantNode=audioContext.createConstantSource();
+constantNode.start();
 */
-//adsr.gain.connect(audioContext.destination)
+//const scope=makeScope(/*Environment.voice0.controls.attack.output*/);
+//scope.init();
+//document.body.appendChild(scope.wrapper);
+
 
 
 function playNote(frequency) {
     console.log("playNote", frequency);
-    voice.osc.frequency.value=frequency;
-    voice.trigger();
-   // synth.voices[0];
-    //adsr.trigger();
+    Environment.voice.voice0.note(frequency);
 }
 
 function releaseNote(frequency){
-   // synth.voices[0].release();
-    //carrier.gain.setValueAtTime(0, audioContext.currentTime);
-    //adsr.triggerRelease();
+    voice.release();
 };
