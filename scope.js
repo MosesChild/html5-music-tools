@@ -72,13 +72,16 @@ const makeScope = (audioNode, instance = defaultInstance("scope")) => ({
       this.hide();
     }
   },
-  init() {
+  init(onScreen=true) {
     this.interface.appendChild(this.link);
     this.toggleScope = this.toggleScope.bind(this);
     this.show = this.show.bind(this);
     this.hide = this.hide.bind(this);
     this.interface=draggableComponentWrapper(this.interface, this.instance);
     this.link.addEventListener("click", this.toggleScope, false);
+    if (onScreen){
+      document.body.appendChild(this.interface);
+    }
     let newLink = registerComponent(this);
     console.log("scope initiated", this);
     return newLink;
