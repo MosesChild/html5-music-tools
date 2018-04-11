@@ -15,6 +15,7 @@ const registerComponent=(component)=>{
   Environment[component.component]? 
     Environment[component.component][component.instance]=component
     : Environment[component.component] = { [ component.instance ] : component }
+    return Environment[component.component][component.instance]
 }
 
 const createElement = (element, attributesObj) => {
@@ -157,7 +158,7 @@ function onRangeChange(r, f) {
   });
 }
 function changeComponentProperty(e){
-  const componentInfo=e.target.closest('.controlGroup')
+  const componentInfo=e.target.closest('.control')
   const component=componentInfo.dataset.component;
   const instance=componentInfo.dataset.owner;
   const property=e.target.dataset.property;
@@ -212,7 +213,48 @@ function makeSelector (name, values){
   document.body.appendChild(wrap);
   return wrap;
 };
+/* right-click on fader for master options...
+  disconnect - all
+  connect to different device (requires Environment);
+  connect to multiple devices (requires Environment and adds constantNode...
+*/
 
+const makeConstantSource=(instance="constantSource")=>({
+  component: "constantSource",
+  instance: instance==="constantSource" ? defaultInstance(instance) : instance,
+  constantSource: audioContext.createConstantSource(),
+  controls: { [instance](e) {
+    Environment.constantSource[instance]["constantSource"].offset.value=-e } 
+  },
+  init(){
+    registerComponent(this);
+    this.constantSource.start();
+  }
+})
+/*
+  //
+  console.log("makeConstantSource", source);
+  registerComponent(source);
+};
+*/
+const addEnvironmentConnections=(fader) =>{
+  const controlGroup=fader.closest('.control');
+  const slider=fader.getElementsByClassName('slider')[0];
+  const property=slider.dataset.property;
+  const originalComponent=controlGroup.dataset.component;
+  const originalOwner=controlGroup.dataset.owner;
+  console.log("addEnvironmentConnections", slider, 
+  originalComponent, originalOwner);
+    if (!slider.dataset.environment){
+    var source=makeConstantSource(property);
+    source.init();
+    slider.classList.add("control");
+    slider.dataset.component="constantSource";
+    slider.dataset.owner=property;
+   // source.connect(Environment[originalComponent][originalOwner]
+    }
+
+}
 
 const simpleFader = (name) => {
   const fader = createElement("div", { className: "fader" });
@@ -224,6 +266,8 @@ const simpleFader = (name) => {
   faderWrapper.appendChild(slider);
   return fader;
 };
+
+
 const makeFaderGroup = ([faderSettings, ...args]) => {
   console.log("makeFaderGroup", faderSettings);
 
@@ -235,7 +279,7 @@ const makeFaderGroup = ([faderSettings, ...args]) => {
 
 
 function faderGroup(...args) {
-const controlGroup = createElement("div", { className: "controlGroup", /*id: defaultInstance("controlGroup")*/});
+const controlGroup = createElement("div", { className: "controlGroup control", /*id: defaultInstance("controlGroup")*/});
   args.forEach(element=> controlGroup.appendChild( simpleFader( element ) ) );
   return controlGroup;
 };
@@ -266,8 +310,6 @@ function setOwner(controlGroup, component, instance){
     controlGroup.dataset.component=component;
 }
 
-
-
 const getAudioSamples=()=>{
   var audioSamples=document.getElementsByClassName("sample");  
   const patchList = $(".patchList");
@@ -283,7 +325,6 @@ const getAudioSamples=()=>{
     patchList.appendChild(audioDup);
   };
 }
-
 window.onload = function() {
   interact(".panel").draggable({
     onmove: dragMoveListener

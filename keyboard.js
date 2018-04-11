@@ -1,5 +1,5 @@
 
-var notes = {
+const notes = {
   sharpScale: [
     "C", "Csharp", "D", "Dsharp", "E", "F", "Fsharp", 
     "G", "Gsharp", "A", "Asharp", "B", "C"],
@@ -25,6 +25,7 @@ const eventListeners = {
     selectWholeKey(event.target.dataset.midinote).forEach(part =>
       part.classList.remove("pressed")
     );
+    releaseNote();
   },
 }
 const samplerPatchWindow={
@@ -86,8 +87,8 @@ const makeFreqTable = (cents)=>{
 
 const Module={
   name:"keyboardMaker",
-  octaves: 2,
-  octaveStart: 4,
+  octaves: null,// set at makeKeyboard() or defaults to two octaves.
+  octaveStart: null, //set at makeKeyboard() or centers octaves at calculateRange
   freqTable: makeFreqTable(),
 makeKey (id, octaveNumber){ // used as the base for all keyboard keys.
   var key = createElement("div", {className : "key"})
@@ -161,38 +162,38 @@ makeUpperC(){
   topKey.classList.add("bottom");
   return topKey;
 },
-
-makeKeyboard(octaves = 2, octaveStart, instance=defaultInstance("keyboard")){
+makeInterface(octaves, octaveStart, instance){
   const keyboard = createElement("div", { className: "keyboard" });
-    // add the top bar, draggable wrapper.
+      // add the top bar, draggable wrapper.
   const wrapper = draggableComponentWrapper(keyboard, instance);
-  // make size and range calculations
+    // make size and range calculations
   this.calculateRange(octaves, octaveStart);
-  // add octaves...
+    // add octaves...
   for (var count = this.octaveStart; count < this.octaveEnd; count++) {
     var octave = this.makeOctave( count);
     keyboard.appendChild(octave);
   }
-  // and add the top note (upper 'C');
-  keyboard.appendChild(this.makeUpperC());
+    // and add the top note (upper 'C');
+  keyboard.appendChild(this.makeUpperC());  
 
-  // add the patch window
-  //makePatchWindow(keyboard);
-  // add computerkeyboard listener.
-  addTypeListener(keyboard);
+    // add the patch window
+    //makePatchWindow(keyboard);
 
-  registerComponent(keyboard);  
-
-  wrapper.appendChild(keyboard);
   document.body.appendChild(wrapper);
-  
-  return {
+    // add computerkeyboard listener.
+    addTypeListener(keyboard);
+    return keyboard;
+},
+
+makeKeyboard(octaves = 2, octaveStart, instance=defaultInstance("keyboard")){
+  const keyboard = {
     instance,
     component : "keyboard",
-    keyboard : wrapper,
-      // add eventlisteners
-    }
+    keyboard : this.makeInterface(octaves, octaveStart, instance),
   }
+  registerComponent(keyboard);
+  return keyboard;
+}
 }
 
 function addTypeListener(element, octave = 4) {

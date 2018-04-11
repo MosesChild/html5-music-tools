@@ -8,6 +8,19 @@ const adsrSettings = { // for initialization only!
     release: { value: 0.5, min: 0, max: 5, step: 0.05 }
   };
 
+// makeSources should take: settingsObject?, controlElements? 
+/*
+const makeSources=(faderGroup)=>{
+    const sources={};
+    const controlList=faderGroup.getElementsByClassName("slider");
+    for (control of controlList){ 
+    }
+
+    const keys=Object.keys(object);
+    keys.forEach(key=> sources[key]=ConstantSource(key));
+    return sources;
+}
+*/
 const display_ADSR_listeners = o => ({
     amount(e){ o.gain.gain.value = e; o.adsrDisplay(); },
     attack(e){ o.attack=e; o.adsrDisplay(); },
@@ -16,11 +29,33 @@ const display_ADSR_listeners = o => ({
     sustain(e){ o.sustain=e; o.adsrDisplay(); },
     release(e){ o.release=e; o.adsrDisplay(); }
 });
+/* two types of ADSR... One that controls a gain node... another that controls a 
+constantNode...  for proper setup...
+    -must make explicit at ADSR creation? "local","master"
+    -set at creation or after creation of Master constantNodes?  
 
-
+    What is ideal future setup of 'make it yourself' audio components...  
+        Pick components from Modules (and get optional interfaces)?
+            Advantages
+                encourages easy encorporation by developers and 
+                    hobbyist into their own programs.
+                could create drag-n-drop interface with packager that 
+                    makes production code.
+        Make interfaces and set them to any (suitable) available component?
+            Advantages
+                Making interfaces the starting place has the advantage of
+                already having a GUI to add selection of components to...
+        Ideally, BOTH...  
+            Start by picking components, but 
+            enable further experimentation by
+                modifying control assignments...
+                easy changing of audio routing...
+                easy branching of current controls...
+*/
 const makeADSR= (interface=false, instance=defaultInstance("adsr") ) => ({
     component:"adsr",
     gain: audioContext.createGain(),
+    mode: "local",
     instance: instance,
     amount: 1, //adsrSettings["amount"].value,
     delay: adsrSettings.delay.value,
@@ -29,7 +64,7 @@ const makeADSR= (interface=false, instance=defaultInstance("adsr") ) => ({
     sustain: adsrSettings.sustain.value,
     release: adsrSettings.release.value,
     controls: {
-        amount(e){ this.gain.gain.value = e},
+       // amount(e){ this.gain.gain.value = e},
         attack(e){ this.attack=e},
         delay(e){ this.delay=e},
         decay(e){ this.decay=e},
@@ -37,14 +72,18 @@ const makeADSR= (interface=false, instance=defaultInstance("adsr") ) => ({
         release(e){this.release=e }
     },
     init(){
-        Environment[this.component][this.instance]=this;
+      //  Environment[this.component][this.instance]=this;
         if (interface){
             Object.assign(this, ADSRinterface);
             this.initInterface();
             this.controls=display_ADSR_listeners(this);
         }
-        this.gain.gain.setValueAtTime(0,audioContext.currentTime)
-        this.gain.connect(audioContext.destination)
+        this.gain.gain.setValueAtTime(0,audioContext.currentTime);
+        this.gain.connect(audioContext.destination);
+        registerComponent(this);
+    },
+    makeMaster(){
+        makeSources(adsrSettings);
     },
     trigger(){
             var time=audioContext.currentTime;
