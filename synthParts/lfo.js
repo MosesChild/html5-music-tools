@@ -6,17 +6,18 @@ const LFOSettings = {
   };
 
 
-const makeLFOinterface = (lfo) => {
+const makeLFOinterface = (object) => {
     //const LFOselect = makeSelector ("LFO type","vibrato","tremolo","both","none");
-    const scope=lfo.scope.wrapper;
     const label= createElement("span", {textContent: "LFO", className: "groupLabel"} );
     const lfoWaveform = makeSelector( "waveform", "sine", "triangle", "sawtooth", "square", "custom");
     const lfoFaderGroup = makeFaderGroup([LFOSettings,"Frequency","Amount"]);
-    var interface= wrapChildren(scope,label, lfoWaveform, lfoFaderGroup);
-    let controlGroup=interface.getElementsByClassName("controlGroup");
-    setOwner(lfoWaveform,lfo);
-    setOwner(lfoFaderGroup,lfo);
-    interface=draggableComponentWrapper( interface, lfo.instance );
+    
+    var interface= wrapChildren(label, lfoWaveform, lfoFaderGroup);
+    interface.className="LFO"
+    //let controlGroup=interface.getElementsByClassName("controlGroup");
+    setOwner(lfoWaveform, object.component, object.instance);
+    setOwner(lfoFaderGroup, object.component, object.instance);
+    interface=draggableComponentWrapper( interface, object.instance );
     document.body.appendChild(interface);
     return interface;
 }
@@ -24,7 +25,7 @@ const makeLFOinterface = (lfo) => {
 const lfoControls=(lfo)=> ({
         amount(e){lfo.gain.gain.value = e;},
         frequency(e){lfo.osc.frequency.setValueAtTime(e, audioContext.currentTime) },
-        attack(e){ lfo.attack=e;},
+        attack(e){lfo.attack=e;},
         decay(e){lfo.decay=e;},
         sustain(e){lfo.sustain=e;},
         release(e){lfo.release=e;},
@@ -32,29 +33,29 @@ const lfoControls=(lfo)=> ({
         waveform(e){lfo.osc.type=e; },
 });
 
-
-const makeLFO=(instance=defaultInstance("LFO"), makeInterface=true ) => ({
-        instance: instance,
+const makeLFO=({interface=false,instance="lfo"}={}) => ({
+        component:"lfo",
+        instance: defaultInstance(instance),
         osc: audioContext.createOscillator(),
         gain: audioContext.createGain(),
         state:"vibrato",/*
         frequency: LFOSettings.frequency.value,
         amount: LFOSettings.amount.value,
-
 */
         init(){
-            Environment[this.instance]=this;
+            
             this.osc.connect(this.gain);
-            this.controls= lfoControls(this);
+            Object.assign(this, lfoControls(this));
+         //   this.controls= lfoControls(this);
             this.osc.frequency.value = 3;
             this.osc.type = "sine";
             this.gain.gain.value = 100;            
-            this.osc.start();            
-            if (makeInterface===true){
-            this.scope=makeScope(this.osc,this.oscAmount);
-            this.scope.init();
-            this.interface=makeLFOinterface(this,this.scope.wrapper);
-            } 
+            this.osc.start();
+            registerComponent(this);            
+            if (interface===true){
+            this.interface=makeLFOinterface(this);
+            }
+            
         },
         toString: function () {
             return "freq="+this.osc.frequency.value.toFixed(1) +

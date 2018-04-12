@@ -52,25 +52,18 @@ constantNode...  for proper setup...
                 easy changing of audio routing...
                 easy branching of current controls...
 */
-const makeADSR= (interface=false, instance=defaultInstance("adsr") ) => ({
+const makeADSR= ({interface=false, instance=defaultInstance("adsr") }) => ({
     component:"adsr",
     gain: audioContext.createGain(),
     mode: "local",
     instance: instance,
+
     amount: 1, //adsrSettings["amount"].value,
     delay: adsrSettings.delay.value,
     attack: adsrSettings.attack.value,
     decay: adsrSettings.decay.value,
     sustain: adsrSettings.sustain.value,
     release: adsrSettings.release.value,
-    controls: {
-       // amount(e){ this.gain.gain.value = e},
-        attack(e){ this.attack=e},
-        delay(e){ this.delay=e},
-        decay(e){ this.decay=e},
-        sustain(e){this.sustain=e },
-        release(e){this.release=e }
-    },
     init(){
       //  Environment[this.component][this.instance]=this;
         if (interface){
@@ -127,17 +120,17 @@ const ADSRinterface={interface: {
     triggerPad: createElement('div',{className:'trigger'}),
     faders: faderGroup("Delay", "Att",  "Dec", "Sus", "Rel"),
     display: createElement("canvas",{className: "adsr_display"}),
-    wrapper: createElement("div", {className:"adsr"}),
     },
     initInterface(){
         const r=this.interface;  
+        const ADSR=wrapChildren(r.display, r.faders, r.triggerPad);
+      //  const ADSR=wrapChildren(together, );
+        ADSR.className=("flex-row")
+      // ADSR.className="adsr";
         addTriggerEnvelopesEvents(r.triggerPad,this);
         setOwner(r.faders, this.component, this.instance);
-        groupLabel(r.faders,"ADSR");
-        r.wrapper.appendChild(r.display);
-        r.wrapper.appendChild(r.triggerPad);
-        r.wrapper.appendChild(r.faders);
-        r.wrapper=draggableComponentWrapper(r.wrapper,this.instance);
+        groupLabel(ADSR,"ADSR");
+        r.wrapper=draggableComponentWrapper(ADSR,this.instance);
         document.body.appendChild(r.wrapper);
         setFaderGroup(this.interface.faders, adsrSettings);
         this.adsrDisplay();

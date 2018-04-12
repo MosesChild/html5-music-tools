@@ -1,13 +1,14 @@
 const Environment={};
 
 
-// call this registerInstance,
-const defaultInstance = (instance="unknown") => {
-  const instanceNumber=Environment[instance] ? Environment[instance].length : 0;
-  if (Environment[instance]){
+const defaultInstance = (instance) => {
+  var instanceNumber=Environment[instance] ? Object.keys(Environment[instance]).length
+  : 0;
+  console.log(instanceNumber, Environment[instance])
+  if (instanceNumber){
     while (Environment[instance][instance+instanceNumber]){
       instance+instanceNumber++;
-    }
+    } 
   }
   return instance+instanceNumber;
 }
@@ -27,43 +28,6 @@ const createElement = (element, attributesObj) => {
     );
   }
   return newElement;
-};
-
-const draggableComponentWrapper = (component, instance) => {
-  const wrapper = createElement("div", { className: "wrapper" });
-  const topPanel = createElement("div", { className: "topPanel" });
-  const defaultSizes = {
-    keyboard: { width: "80vw", height: "20vh" },
-    sampler: { width: "40vh", height: "20vh" },
-    sequencer: { width: "80vw", height: "15vh" },
-    menu: { width: "10vh" },
-    LFO: { width: "40vh"}
-  };
-  if (instance){
-  // topPanel should be flex-container, justify content space-between(css);
-  let menu = createElement("i", {
-    className: "material-icons menuIcon",
-    id: instance + "_menu",
-    textContent: "menu"
-  });
-  topPanel.appendChild(menu);
-  }
-  const handle = createElement("i", {
-    className: "material-icons handle",
-    textContent: "drag_handle"
-  });
-
-  const cname = component.className;
-  if (defaultSizes[cname]) {
-    wrapper.style.width = defaultSizes[cname].width;
-    if (defaultSizes[cname].height) {
-      wrapper.style.height = defaultSizes[cname].height;
-    }
-  }
-  topPanel.appendChild(handle);
-  wrapper.appendChild(topPanel);
-  wrapper.appendChild(component);
-  return wrapper;
 };
 
 const makeMaterialIcon=(iconName=>createElement("i",{className: "material-icons", textContent:iconName}));
@@ -157,7 +121,7 @@ function onRangeChange(r, f) {
     if (!n) f(e);
   });
 }
-function changeComponentProperty(e){
+const changeComponentProperty=(e)=>{
   const componentInfo=e.target.closest('.control')
   const component=componentInfo.dataset.component;
   const instance=componentInfo.dataset.owner;
@@ -168,8 +132,14 @@ function changeComponentProperty(e){
   //const value=Number(e.target.value)
   // this value could get curve here!
   const value=faderCurve(Number(e.target.value), max);
-  const method=Environment[component][instance]["controls"][property];
-  method(value);
+  const method=Environment[component][instance][property];
+  console.log(method, typeof method)
+  if (typeof method==="function"){
+    method(value);
+  }  else {
+    // quick hack for adsr controls...
+    Environment[component][instance]["controls"][property](value);
+  }
 }
 
 function faderCurve(value, max, steep=10){
@@ -185,12 +155,18 @@ function faderCurve(value, max, steep=10){
   return gain;
 }
 
-function selectOption(e){
-  const instance=e.target.closest('.controlGroup').dataset.owner;
-  const method=Environment[type][instance]["controls"][e.target.dataset.property];
+const selectOption=(e)=>{
+  const selection=e.target.dataset.selection
+  const option=e.target.closest('.controlGroup');
+  const component=option.dataset.component;
+  const instance=option.dataset.owner;
+  //const method=Environment[component][instance][selection]();
   const value=e.target.value;
-  console.log(instance, method, value);
-  method(value);
+  console.log(component, instance, selection, value);
+  console.log(Environment[component][instance])
+  Environment[component][instance][selection](value)
+
+  //method(value);
 }
 
 
@@ -207,7 +183,7 @@ function makeSelector (name, values){
   }
   console.log("componentName",componentName)
   selector.onchange=selectOption;
-  selector.dataset.property=componentName;
+  selector.dataset.selection=componentName;
   groupLabel(wrap, name);
   wrap.appendChild(selector);
   document.body.appendChild(wrap);
@@ -297,10 +273,10 @@ function setFaderGroup(faderGroup, faderSettings) {
   }
 }
 
-function groupLabel(group, label) {
+function groupLabel(group, label, className="groupLabel") {
   label = createElement("span", {
     textContent: label,
-    className: "groupLabel"
+    className: className,
   });
   group.prepend(label);
 }
@@ -325,19 +301,66 @@ const getAudioSamples=()=>{
     patchList.appendChild(audioDup);
   };
 }
+
+const draggableComponentWrapper = (component, instance) => {
+  const wrapper = createElement("div", { className: "wrapper" });
+  const topPanel = createElement("div", { className: "topPanel" });
+
+  const defaultSizes = {
+    keyboard: { width: "80vw", height: "20vh" },
+    sampler: { width: "40vh", height: "20vh" },
+    sequencer: { width: "80vw", height: "15vh" },
+    menu: { width: "10vh" },
+    LFO: { width: "40vh"}
+  };
+  if (instance){
+
+  let menu = createElement("i", {
+    className: "material-icons menuIcon",
+    id: instance + "_menu",
+    textContent: "menu"
+  });
+  topPanel.appendChild(menu);
+  }
+  const handle = createElement("img", {
+    className: "handle", src: "./resize-icon-small.gif", style:"background-color:green"
+    , alt: "resize component"
+  });
+
+
+  const cname = component.className;
+
+  if (defaultSizes[cname]) {
+    wrapper.style.width = defaultSizes[cname].width;
+    if (defaultSizes[cname].height) {
+      wrapper.style.height = defaultSizes[cname].height;
+    }
+  } else {
+    if (component.style.width){ wrapper.style.width=component.style.width}
+    if (component.style.height){ wrapper.style.height=component.style.height}
+  }
+
+  topPanel.appendChild(handle);
+  wrapper.appendChild(topPanel);
+  wrapper.appendChild(component);
+  return wrapper;
+};
+
 window.onload = function() {
   interact(".panel").draggable({
     onmove: dragMoveListener
   });
   interact(".wrapper")
     .draggable({
-      allowFrom: ".handle",
+      allowFrom: ".topPanel",
+      ignoreFrom: [".handle"],
       onmove: dragMoveListener
     })
     .resizable({
+      allowFrom: ".handle",
       preserveAspectRatio: false,
-      ignoreFrom: [".key", ".handle"],
-      edges: { left: true, right: true, bottom: false, top: true }
+  //    ignoreFrom: [".key", ".handle"],
+        edges: { left: true, bottom: true, right: true,  top: true }
     })
     .on("resizemove", function(event) {
       var target = event.target,

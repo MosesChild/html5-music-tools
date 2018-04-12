@@ -61,10 +61,12 @@ button {
 }
 
 .handle{
-    margin-right: 20px;
+    height: 10px;
+    margin: 5px;
     flex: 0 0 auto;
     justify-content: flex-end;
 }
+
 .menuIcon{
     flex: 0 0 auto;
 
@@ -78,8 +80,8 @@ button {
 .material-icons.record {color: red;}
 
 .fader {
-    flex: 0 0 ;
-    width:24px;
+    flex: 1 0 ;
+    max-width:35px;
     padding: 2px;
     display: flex;
     flex-flow: column wrap;
@@ -102,7 +104,11 @@ button {
     transform-origin: 40px 40px;
     transform: rotate(-90deg);
 }
-
+.flex-row{
+    display:flex;
+    flex-flow: row wrap;
+    justify-content: space-around;
+}
 .controlGroup{
     display:inline-flex;
     justify-content: space-around;
@@ -115,9 +121,12 @@ button {
     line-height: 1.5;
     flex: 1 1 100%;
 }
+.adsr_display {
 
-.adsr {
+}
+.defaultSize {
     width: 300px;
+    height: 200px;
 }
 .trigger {
     margin: 20px;
