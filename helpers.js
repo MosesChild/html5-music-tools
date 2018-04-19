@@ -1,10 +1,9 @@
-const Environment={};
-
+const Environment= {};
 
 const defaultInstance = (instance) => {
-  var instanceNumber=Environment[instance] ? Object.keys(Environment[instance]).length
-  : 0;
-  console.log(instanceNumber, Environment[instance])
+  var instanceNumber=Environment[instance] ? 
+      Object.keys(Environment[instance]).length : 0;
+  //console.log(instanceNumber);
   if (instanceNumber){
     while (Environment[instance][instance+instanceNumber]){
       instance+instanceNumber++;
@@ -19,6 +18,28 @@ const registerComponent=(component)=>{
     return Environment[component.component][component.instance]
 }
 
+const makeAudioComponent=(component, name, interface=false)=>{
+  const comp= {       
+      component,
+      name,
+      instance:defaultInstance(component),
+      connections: [],
+      /*connect(internalNode, destinationNode){
+          // should check internalNode exists internally!...
+          console.log(internalNode, destinationNode)
+          try {(internalNode.connect(destinationNode));
+          this.connections=_.unionBy([{[internalNode.constructor.name] : destinationNode}],this.connections);
+          }
+          catch(e){console.log(e)};
+      },/*
+      findNodes(){
+          _.filter(Environment.lfo.vibrato0, function (o){return o instanceof AudioNode}, [0])
+      }*/
+  }
+  registerComponent(comp);
+  return comp
+}
+
 const createElement = (element, attributesObj) => {
   var newElement = document.createElement(element);
   if (attributesObj) {
@@ -29,6 +50,12 @@ const createElement = (element, attributesObj) => {
   }
   return newElement;
 };
+
+function wrapChildren(...args) {
+  const wrapper = createElement("div");
+  args.forEach(component => wrapper.appendChild(component));
+  return wrapper;
+}
 
 const makeMaterialIcon=(iconName=>createElement("i",{className: "material-icons", textContent:iconName}));
 
@@ -42,52 +69,12 @@ const createMaterialIconButton = (className, iconName, eventHandler) => {
   return button;
 };
 
-const createMaterialIconToggleButton=(toggleClassName, iconName1, iconName2, toggleEvent1,toggleEvent2)=>{
-  
-}
-const classToggler = (instanceID, className) => {
-  const instance=$("."+instanceID)
-  const currentItem= instance.getElementsByClassName(className)[0];
-  currentItem.classList.toggle("toggleOn");
-}
-const eventChanger = (event1,event2=event1, toggleClass, icon1, icon2) => {
-  if (toggleClass.contains("toggleOn")){
-    toggleClass.lastChild=makeMaterialIcon(icon2);
-    event1();
-  } else {
-    toggleClass.lastChild=makeMaterialIcon(icon1);
-    event2();
-  }
-};
-
-const createPanel = (idIconNameArray, id) => {
-  var panel = createElement("p", { className: "panel", id: id });
-  //panelheader = panel.appendChild(createElement("i",{className: "material-icons header", textContent: "drag_handle"}))
-
-  idIconNameArray.forEach(button => {
-    btn = createMaterialIconButton(button[0], button[1], button[3]);
-    panel.appendChild(btn);
-  });
-  //dragElement(panel);
-  return panel;
-};
-
-const menu = list => {
-  //first get version that creates a list...
-  const radioList = makeList(list);
-  radioList.className = "menu";
-  let dragmenu = draggableComponentWrapper(radioList);
-
-  document.body.appendChild(dragmenu);
-  console.log("menu", dragmenu);
-};
-
-
 const makeButtons = (array) => {
   const group=[];
   array.forEach(item => group.push(createElement("button", { textContent: item, value: item })));
   return group;
 };
+
 
 function makeMultiSelector(array){
   const wrapper=createElement("div",{className:"menu"});
@@ -97,8 +84,6 @@ function makeMultiSelector(array){
   });  
   wrapper.appendChild(selections);
   wrapper.appendChild(createElement('button',{className:"done", textContent:"done"}))
-  const draggable=draggableComponentWrapper(wrapper);
-  return draggable;
 }
 function setMultiSelector(HTMLcomponent, selectedArray){
   const inputs=HTMLcomponent.getElementsByClassName('li');
@@ -122,24 +107,25 @@ function onRangeChange(r, f) {
   });
 }
 const changeComponentProperty=(e)=>{
-  const componentInfo=e.target.closest('.control')
+  const componentInfo=e.target.closest('.component');
   const component=componentInfo.dataset.component;
-  const instance=componentInfo.dataset.owner;
+  const instance=componentInfo.dataset.instance;
   const property=e.target.dataset.property;
-  
-  const max=e.target.max;
+  //const max=e.target.max;
   //console.log("max",max);
-  //const value=Number(e.target.value)
+  const value=Number(e.target.value)
   // this value could get curve here!
-  const value=faderCurve(Number(e.target.value), max);
-  const method=Environment[component][instance][property];
-  console.log(method, typeof method)
+
+ // const value=faderCurve(Number(e.target.value), max);
+ console.log("change", component, instance, property, value)
+
+ const method=Environment[component][instance][property];
   if (typeof method==="function"){
     method(value);
-  }  else {
-    // quick hack for adsr controls...
+  } else {
     Environment[component][instance]["controls"][property](value);
   }
+
 }
 
 function faderCurve(value, max, steep=10){
@@ -157,9 +143,9 @@ function faderCurve(value, max, steep=10){
 
 const selectOption=(e)=>{
   const selection=e.target.dataset.selection
-  const option=e.target.closest('.controlGroup');
+  const option=e.target.closest('.component');
   const component=option.dataset.component;
-  const instance=option.dataset.owner;
+  const instance=option.dataset.instance;
   //const method=Environment[component][instance][selection]();
   const value=e.target.value;
   console.log(component, instance, selection, value);
@@ -169,12 +155,10 @@ const selectOption=(e)=>{
   //method(value);
 }
 
-
-
 function makeSelector (name, values){
   var componentName=name.replace (/[ ]/gi, "");
   var wrap = createElement("div",{className:"controlGroup"});
-  var selector = createElement("select");
+  var selector = createElement("select",{className:"selector"});
   for (var i = 1; i < arguments.length; i++) {
       let option = document.createElement("option");
       option.value = arguments[i];
@@ -207,30 +191,6 @@ const makeConstantSource=(instance="constantSource")=>({
     this.constantSource.start();
   }
 })
-/*
-  //
-  console.log("makeConstantSource", source);
-  registerComponent(source);
-};
-*/
-const addEnvironmentConnections=(fader) =>{
-  const controlGroup=fader.closest('.control');
-  const slider=fader.getElementsByClassName('slider')[0];
-  const property=slider.dataset.property;
-  const originalComponent=controlGroup.dataset.component;
-  const originalOwner=controlGroup.dataset.owner;
-  console.log("addEnvironmentConnections", slider, 
-  originalComponent, originalOwner);
-    if (!slider.dataset.environment){
-    var source=makeConstantSource(property);
-    source.init();
-    slider.classList.add("control");
-    slider.dataset.component="constantSource";
-    slider.dataset.owner=property;
-   // source.connect(Environment[originalComponent][originalOwner]
-    }
-
-}
 
 const simpleFader = (name) => {
   const fader = createElement("div", { className: "fader" });
@@ -243,21 +203,18 @@ const simpleFader = (name) => {
   return fader;
 };
 
-
 const makeFaderGroup = ([faderSettings, ...args]) => {
   console.log("makeFaderGroup", faderSettings);
-
   const faders=faderGroup(...args);
   console.log(faders);
   setFaderGroup(faders, faderSettings);
   return faders;
 }
 
-
 function faderGroup(...args) {
-const controlGroup = createElement("div", { className: "controlGroup control", /*id: defaultInstance("controlGroup")*/});
-  args.forEach(element=> controlGroup.appendChild( simpleFader( element ) ) );
-  return controlGroup;
+const faderGroup = createElement("div", { className: "faderGroup"});
+  args.forEach(element=> faderGroup.appendChild( simpleFader( element ) ) );
+  return faderGroup;
 };
 
 function setFaderGroup(faderGroup, faderSettings) {
@@ -267,7 +224,10 @@ function setFaderGroup(faderGroup, faderSettings) {
   for (slider of faders) {
       const property=rangeSettings[index];
       onRangeChange(slider, changeComponentProperty);
-      slider.dataset.property=property;
+      /* this is the important part... 
+       set the input-range(slider) dataset.property to the 
+       name of the listener on the component that you want! */
+      slider.dataset.property=property;    
     Object.assign(slider, faderSettings[property]);
     index++;
   }
@@ -280,55 +240,42 @@ function groupLabel(group, label, className="groupLabel") {
   });
   group.prepend(label);
 }
-function setOwner(controlGroup, component, instance){
-    console.log(instance,controlGroup);
-    controlGroup.dataset.owner=instance;
-    controlGroup.dataset.component=component;
-}
 
-const getAudioSamples=()=>{
-  var audioSamples=document.getElementsByClassName("sample");  
-  const patchList = $(".patchList");
-  while (patchList.hasChildNodes()) {
-    patchList.removeChild(patchList.lastChild);
-  }
-  console.log("getPatchNames", audioSamples);
-  for(sample of audioSamples){
-    console.log(sample);
-    var audioDup=sample.cloneNode();
-    audioDup.className="";
-    audioDup.controls=true;
-    patchList.appendChild(audioDup);
-  };
-}
 
-const draggableComponentWrapper = (component, instance) => {
-  const wrapper = createElement("div", { className: "wrapper" });
-  const topPanel = createElement("div", { className: "topPanel" });
 
-  const defaultSizes = {
-    keyboard: { width: "80vw", height: "20vh" },
-    sampler: { width: "40vh", height: "20vh" },
-    sequencer: { width: "80vw", height: "15vh" },
-    menu: { width: "10vh" },
-    LFO: { width: "40vh"}
-  };
-  if (instance){
-
-  let menu = createElement("i", {
+const makeTopPanel = (o) => {
+  const panel=createElement("div", { className: "topPanel"});
+  const menuIcon = createElement("i", {
     className: "material-icons menuIcon",
-    id: instance + "_menu",
-    textContent: "menu"
+    textContent: "menu",
   });
-  topPanel.appendChild(menu);
-  }
-  const handle = createElement("img", {
+  const resizeIcon = createElement("img", {
     className: "handle", src: "./resize-icon-small.gif", style:"background-color:green"
     , alt: "resize component"
   });
+  menuIcon.dataset.instance = o.instance;
+  menuIcon.dataset.component = o.component;
+  panel.appendChild(menuIcon);
+  panel.appendChild(resizeIcon);
+  return panel;
+}
 
 
-  const cname = component.className;
+const draggableComponentWrapper = (interface, obj) => {
+  const wrapper = createElement("div", { className: "wrapper" });
+  const topPanel=makeTopPanel(obj);
+  
+  const defaultSizes = {
+    keyboard: { width: "95vw", height: "20vh" },
+    sampler: { width: "40vh", height: "20vh" },
+    stepsContainer: { width: "80vw", height: "15vh" },
+    menu: { width: "10vh" },
+    LFO: { width: "300px"},
+    ADSR: { width: "300px"},
+    voice: { width: "300px"}
+  };
+  const cname = interface.className;
+  
 
   if (defaultSizes[cname]) {
     wrapper.style.width = defaultSizes[cname].width;
@@ -336,24 +283,63 @@ const draggableComponentWrapper = (component, instance) => {
       wrapper.style.height = defaultSizes[cname].height;
     }
   } else {
-    if (component.style.width){ wrapper.style.width=component.style.width}
-    if (component.style.height){ wrapper.style.height=component.style.height}
+    if (interface.style.width){ wrapper.style.width=interface.style.width}
+    if (interface.style.height){ wrapper.style.height=interface.style.height}
   }
-
-  topPanel.appendChild(handle);
+  
   wrapper.appendChild(topPanel);
-  wrapper.appendChild(component);
+  wrapper.appendChild(interface);
   return wrapper;
 };
 
+function hide(){
+  let parent=this.interface.inner.parentNode;
+  if (parent.lastChild && parent.lastChild===this.interface.inner){
+      this.interface.inner=parent.removeChild(this.interface.inner);
+  }
+}
+
+function show(){
+  this.interface.wrapper.appendChild(this.interface.inner);
+}
+
+
+function componentMenu(selectionListener, ...args){
+  // use like : componentMenu.call(this);
+  const options=makeButtons(...args);
+  let menu=createElement("div",{className:"componentMenu", instance: defaultInstance("menu") });
+  options.forEach(option=>{
+      menu.appendChild(option);
+  })
+  menu.addEventListener("click", selectionListener);
+  return menu;
+}
+
+const makeSelectionListener=(o, methods)=>{
+  return function (e){ 
+    const value=e.target.value;
+    const menu=e.target.parentNode;
+    const container=menu.parentNode; 
+    container.removeChild(menu);
+    try {methods[value].call(o)
+}
+  catch(e){
+    const comp=menu.closest('div.wrapper');
+    const instance=comp.instance;
+    const component=comp.component;
+    Environment[component][instance][value]()}
+  }
+}
+
 window.onload = function() {
   interact(".panel").draggable({
+    ignoreFrom: [".metro_volume_wrapper"],
     onmove: dragMoveListener
   });
   interact(".wrapper")
     .draggable({
       allowFrom: ".topPanel",
-      ignoreFrom: [".handle"],
+     // ignoreFrom: [".handle"],
       onmove: dragMoveListener
     })
     .resizable({
@@ -396,7 +382,9 @@ window.onload = function() {
     target.setAttribute("data-x", x);
     target.setAttribute("data-y", y);
   }
+  document.body.addEventListener("click", openMenu, true);
 };
+
 $ = selector => {
   const nodeList = document.querySelectorAll(selector);
   if (nodeList.length === 1) {
@@ -405,5 +393,23 @@ $ = selector => {
     return nodeList;
   }
 };
+
+const openMenu=(e)=>{
+  if (e.target.classList.contains("menuIcon")){
+    const component=e.target.dataset.component;
+    const instance=e.target.dataset.instance;
+    Environment[component][instance].menu()
+  //  console.log("menuIcon", e.target);
+  }
+}
+/* menu needs: 
+scope,
+connected to...from?
+insert?
+change interface settings Range...
+*/
+
+
+
 
 

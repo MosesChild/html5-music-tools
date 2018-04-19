@@ -1,148 +1,215 @@
-const makeSteps = ( stepContainer, stepCount, startNumber = 0 ) => {
-  for (let i = startNumber; i < stepCount; i++) {
-    let step = createElement("div", {
-      id: "step" + i,
-      className: "step",
-      onclick: clickSeqStep
-    });
-    stepContainer.appendChild(step);
+const makeSteps = ( stepsContainer, stepCount) => {
+  var startNumber=stepsContainer.children.length;
+  while (stepsContainer.children.length>stepCount){
+    stepsContainer.removeChild(stepsContainer.lastChild);
   }
-  return stepContainer;
+  if (startNumber<stepCount){
+    for (let i = startNumber; i < stepCount; i++) {
+      let step = createElement("div", {
+        id: "step" + i,
+        className: "step",
+        onclick: clickSeqStep
+      });
+      stepsContainer.appendChild(step);
+    }
+  }
+  return stepsContainer;
 };
+
+const makeMetronome=({downbeat=880, upbeat=440, length=0.1 }={})=>{
+    const metronome={};//makeAudioComponent("metronome");
+    const beep=audioContext.createOscillator();
+    const gain=audioContext.createGain();
+    var volume=.5
+    const volumeControl= createElement("input", {className:
+       "metronomeVolume", type:"range", min: 0, max: 1, step: .01});
+    const volumeWrapper= createElement("span", {className: "metro_volume_wrapper"})
+    const listener=(e)=>volume = e.target.value;
+    volumeWrapper.appendChild(volumeControl);
+   // volumeControl.style.width= "50px";
+   Object.assign(volumeWrapper.style, {height: "40px", width: "20px"}) 
+   Object.assign(volumeControl.style, {height: "20px",
+      width: "40px",
+      transformOrigin: "20px 20px",
+      transform: "rotate(-90deg)"})
+    beep.start();
+    beep.connect(gain);
+    gain.connect(audioContext.destination);
+    gain.gain.value=0;
+
+    onRangeChange(volumeControl, listener);
+
+    Object.assign(metronome, {beep, gain, length})
+    const beat = (beat)=>{
+      if (beat==="down"){
+        beep.frequency.setValueAtTime(downbeat, audioContext.currentTime);
+      } else {
+        beep.frequency.setValueAtTime(upbeat, audioContext.currentTime)
+      }
+      gain.gain.setValueAtTime(volume, audioContext.currentTime)
+    // gain.gain.setValueAtTime(0, audioContext.currentTime+length);
+      gain.gain.linearRampToValueAtTime(0, audioContext.currentTime+length)
+    }
+    return {beat, volumeWrapper}
+}
+
 
 const initializeStepsContainer=(stepCount) => {
-  var stepContainer = createElement("div", { className: "sequencer" });
-  makeSteps(stepContainer, stepCount);
-  stepContainer=draggableComponentWrapper(stepContainer,"sequencer");
-  return stepContainer;
+  var stepsContainer = createElement("div", { className: "stepsContainer" });
+  makeSteps(stepsContainer, stepCount, 0);
+  return stepsContainer;
 }
-const makeSeqPanel =( bpm, timeSigTop, timeSigBottom, ButtonEventHandler1, ButtonEventHandler2 )=> {
-  const seqButtons = [["togglePlay", "play_arrow", ButtonEventHandler1]];//["back","skip_previous",ButtonEventHandler2],
-  const panel = createPanel(seqButtons,"seqPanel");
-  panel.appendChild(createElement("input", { type: "number", id: "bpm", className: "panel-element", value: bpm }));
-  const timeSig =panel.appendChild(createElement("div", {className:"timeSigWrapper panel-element"}))
-  timeSig.appendChild(createElement("input", { type: "number", id: "timeTop", value: timeSigTop }))
-  timeSig.appendChild(createElement("input", { type: "number", id: "timeBottom", value: timeSigBottom }))
-  panel.appendChild(createElement("div", { id: "panelClick", className: "panel-element"}));
+
+const makeTimeSig=(sequencer)=>{
+  const sigTop=createElement("input", { type: "number", id: "timeTop", value: sequencer.timeSigTop})
+  const sigBottom=createElement("input", { type: "number", id: "timeBottom", value: sequencer.timeSigBottom })
+  const timeSig=wrapChildren(sigTop, sigBottom);
+  timeSig.className = "timeSigWrapper panel-element";
+  sigTop.onchange = sequencer.handleTimeChanges;
+  sigBottom.onchange=sequencer.handleTimeChanges;
+  return timeSig;
+}
+
+
+const makeSeqPanel =( sequencer )=> { 
+  function togglePlay(e){
+    console.log("HELLLO")
+    let icon=playButton.firstChild;
+    if (sequencer.playTimer){
+      sequencer.stop();
+      icon.textContent="play_arrow";
+    } else {
+      icon.textContent="pause";
+      sequencer.start();
+    }
+  }
+  const playButton=createMaterialIconButton("togglePlay","play_arrow",togglePlay);
+  var bpmInput=createElement("input", { type: "number", id: "bpm", className: "panel-element", value: sequencer.bpm });
+  const panelClick= createElement("div", { id: "panelClick", className: "panel-element"}); 
+  const timeSig=makeTimeSig(sequencer);
+  const panel=wrapChildren(playButton,bpmInput, timeSig, panelClick, sequencer.metro.volumeWrapper);
   
-  return panel;
+  playButton.firstChild.classList.add("large");
+  //clickVolume.dataset={instance: "metronome0", component: "metronome", property:"volume"}
+
+  Object.assign(panel, { className: "panel", id: "seqPanel" })
+
+  document.body.appendChild(panel);
+  return {
+    panel,
+    playButton,
+    bpmInput,
+    timeSig,
+    panelClick
+  }
 };
 
-
-export const makeSequencer = ({
-  instance = defaultInstance("sequencer"),
-  bpm = 120,
+const makeSequencer =({bpm = 120,
   timeSigTop = 4,
   timeSigBottom = 4,
   stepsPerTop = 4,
   measures = 2
-} = {}) => ({
-  instance,
-  bpm,
-  timeSigTop,
-  timeSigBottom,
-  stepsPerTop,
-  measures,
-  sequencerWindow: document.body.appendChild(initializeStepsContainer(stepsPerTop * timeSigTop * measures)),
-  panel: document.body.appendChild(makeSeqPanel(bpm,timeSigTop,timeSigBottom, this.togglePlay)),
-  steps: document.getElementsByClassName("step"),
-  startButton: $(".togglePlay"),
-  bpmInput: document.getElementById("bpm"),
-  panelClick: document.getElementById("panelClick"),
-  step: 0,
-  metronome: timeSigTop,
-  playTimer: null,
-  stepTime: 60 / bpm / (stepsPerTop ),
-  init() { 
-    this.startButton.firstChild.classList.add("large");
-    // currently necessary to get default bindings...
-    this.startButton.onclick = this.togglePlay.bind(this);
-    this.bpmInput.onchange = this.changeBPM.bind(this);
-    // add to our environment variables.
-    Environment[this.instance]=this;
-  },
-  togglePlay(e){
-    let icon=this.startButton.firstChild;
-    if (this.playTimer){
-      this.stop();
-      console.log(icon);
-      icon.textContent="play_arrow";
-    } else {
-      icon.textContent="pause";
-      this.start();
-    }
-  },
-  stop(){ clearInterval(this.playTimer);
-      this.playTimer = null;
-  },
-  handleTimeChanges(e){
-    const inputID=event.target.ID;
-      this[inputID]=event.target.value;
-      if (inputID==="timeSigBottom" || inputID==="timeSigTop"){
-        // change steps!
-        // calculate new steps 
-        const newStepNumber=stepsPerTop * timeSigTop * measures;
-        if (newStepNumber>this.steps){
-          this.sequencerWindow.append
+  } = {}) =>{
+    const sequencer=makeAudioComponent({component:"sequencer"});
+    Object.assign(sequencer, {
+      bpm,
+      timeSigTop,
+      timeSigBottom,
+      stepsPerTop,
+      measures,
+      stepsContainer: initializeStepsContainer(stepsPerTop * timeSigTop * measures),
+      changeBPM(e) {//handleTimeChange
+        const elapsedTime = new Date() - this.lastBeat;
+        const nextBeat =
+          this.stepTime - elapsedTime > 0 ? this.stepTime - elapsedTime : null;
+        this.stepTime = 60 / this.bpmInput.value / (stepsPerTop );
+        if (this.playTimer) {
+          clearInterval(this.playTimer);
+          this.playTimer = null;
+          if (nextBeat) {
+            setTimeout(this.start, nextBeat);
+          }
+          this.start();
         }
-        
-        
-      }
-      changeBPM(e);    
-  },
-  changeBPM(e) {//handleTimeChange
-    const elapsedTime = new Date() - this.lastBeat;
-    const nextBeat =
-      this.stepTime - elapsedTime > 0 ? this.stepTime - elapsedTime : null;
-    this.bpm = e.target.value;
-    this.setTimeParameters();
-    if (this.playTimer) {
-      clearInterval(this.playTimer);
-      this.playTimer = null;
-      if (nextBeat) {
-        setTimeout(this.start, nextBeat);
-      }
-      this.start();
-    }
-  },
-  setTimeParameters() {
-    this.stepTime = 60 / this.bpm / (stepsPerTop );
-  },
-  start() {
-    console.log("startSequencer", this.stepTime);
-    if (!this.playTimer) {
-      const totalSteps=stepsPerTop * timeSigTop * measures;
-      this.playTimer = setInterval(() => {
-        const oldCursor = document.querySelectorAll(".now");
-     //   const lastStep = document.getElementById("step" + this.step);
-        let currentStep = this.steps[this.step];
-        // turn off last cursor value (now)...
-        if (oldCursor) {
-          oldCursor.forEach(cursor => cursor.classList.remove("now"));
-        }
-        // release last notes...
-        $(".pressed").forEach(key => key.classList.remove("pressed"));
+      },
+      handleTimeChanges(event){
+        console.log(event)
+        const inputID=event.target.id;
+        var value=parseInt(event.target.value);
+        var timeSigBottom=sequencer.timeSigBottom ;
+          if (inputID==="timeBottom"){
+            event.target.value = value>timeSigBottom ? 2 * timeSigBottom : 0.5 * timeSigBottom
+            sequencer.timeSigBottom=event.target.value//value >=2 && value<= 64 ? value : sequencer.timeSigBottom;
+            }
+          if (inputID==="timeTop"){
+            // change steps!
+            sequencer.timeSigTop=timeTop=event.target.value
+            // calculate new steps 
+            const newStepNumber=stepsPerTop * timeTop * measures;
+              makeSteps(sequencer.stepsContainer, newStepNumber)
 
-        // increment step..
-        this.step = (this.step + 1 ) % totalSteps;
-        // make metronome click...
-        if (this.step % this.metronome===0 ) {
-          this.panelClick.classList.add("now");
-        } else {
-          this.panelClick.classList.remove("now");
-        }
-        document.getElementById("step" + this.step).classList.add("now");
-        // if step is 'on'... trigger current notes...
-        if (currentStep.classList.contains("on") && currentStep.dataset.triggerList) {
-          triggerNotes(currentStep);
-        }
-        // record time (for smooth bpm)
-        this.lastBeat = new Date();
-      }, this.stepTime * 1000);
-    }
-  }
-});
+          }
+          sequencer.changeBPM();    
+      },
+      start() {
+        console.log("startSequencer", this.stepTime);
+        if (!this.playTimer) {
+          const totalSteps=stepsPerTop * sequencer.timeSigTop * sequencer.measures;
+          this.playTimer = setInterval(() => {
+            const oldCursor = document.querySelectorAll(".now");
+        //   const lastStep = document.getElementById("step" + this.step);
+            let currentStep = this.steps[this.step];
+            // turn off last cursor value (now)...
+            if (oldCursor) {
+              oldCursor.forEach(cursor => cursor.classList.remove("now"));
+            }
+            // release last notes...
+            $(".pressed").forEach(key => key.classList.remove("pressed"));
 
+            // make metronome click...
+            if (this.step % this.metronome===0 ) {
+              this.panelClick.classList.add("now");
+              console.log(totalSteps/measures, this.step)
+              let beat= this.step==0 || this.step==totalSteps/measures ? "down" : "beat"
+              sequencer.metro.beat(beat)
+
+
+            } else {
+              this.panelClick.classList.remove("now");
+            }
+            document.getElementById("step" + this.step).classList.add("now");
+            // if step is 'on'... trigger current notes...
+            if (currentStep.classList.contains("on") && currentStep.dataset.triggerList) {
+              triggerNotes(currentStep);
+            }
+                        // increment step..
+                        this.step = (this.step + 1 ) % totalSteps;
+            // record time (for smooth bpm)
+            this.lastBeat = new Date();
+            }, this.stepTime * 1000);
+        }
+      },
+      metro: makeMetronome(),
+
+    })
+    
+    Object.assign(sequencer, {
+      window: draggableComponentWrapper(sequencer.stepsContainer, sequencer),
+      panel: makeSeqPanel(sequencer),
+      steps: document.getElementsByClassName("step"),
+      bpmInput: document.getElementById("bpm"),
+      panelClick: document.getElementById("panelClick"),
+      step: 0,
+      metronome: timeSigTop,
+      playTimer: null,
+      stepTime: 60 / bpm / (stepsPerTop ),
+      stop(){ clearInterval(this.playTimer);
+          this.playTimer = null;
+      }
+    });
+    sequencer.bpmInput.onchange=sequencer.changeBPM;
+    document.body.appendChild(sequencer.window);
+}
 function useTriggerList(seqStep, triggerCallback) {
   console.log("useTriggerList", seqStep);
   const triggers = seqStep.dataset.triggerList
@@ -166,7 +233,7 @@ function addRemoveTriggerList(triggerName, listNotes) {
 
 function triggerNotes(seqStep) {
   console.log("triggerNotes", seqStep);
-  useTriggerList(seqStep, keyPressed);
+  useTriggerList(seqStep, eventListeners.keyPressed);
   useTriggerList(seqStep, playNote);
 }
 

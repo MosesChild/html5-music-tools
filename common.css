@@ -3,13 +3,8 @@ body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
     margin: 0;
 
-    height: 100vh;
 }
-.wrapper {
-    display: flex;
-    flex-direction: column;
-    margin: 10px;
-}
+
 .topPanel{
     flex: 0 0 40px;
     width: 100%;
@@ -21,6 +16,9 @@ body {
     height: 2em;
     font-size: 20px;
     color: green;
+}
+.componentMenu {
+    position: absolute;
 }
 button {
     width:100%;
@@ -80,23 +78,21 @@ button {
 .material-icons.record {color: red;}
 
 .fader {
-    flex: 1 0 ;
-    max-width:35px;
-    padding: 2px;
     display: flex;
-    flex-flow: column wrap;
+    flex-flow: column wrap; 
+    align-items: center;
+    float: left;
+    margin: 4px;
 }
 .fader span {
-    overflow-x: hidden;
-    padding-bottom: 5px;
-    flex: 1 0 20px;
-    width: 24px;
+    overflow: hidden;
+    padding-bottom: 10px;
     font-size: 10px;
 }
 .sliderWrapper{
-    flex: 1 0 80px;
     position: relative;
     height: 80px;
+    width: 20px;
 }
 .slider{
     height: 20px;
@@ -109,39 +105,47 @@ button {
     flex-flow: row wrap;
     justify-content: space-around;
 }
-.controlGroup{
-    display:inline-flex;
-    justify-content: space-around;
-    flex-flow:row wrap;
+.component {
+    float: left;
+    text-align: center;
     margin: 10px;
 }
-.groupLabel{
-    order: 0;
+.faderGroup{
+    display:flex;
+    flex: 4;
+    justify-content: space-around;
+    align-content: center;
+    flex-flow: row wrap;
+    float: left;
+}
+.groupLabel{  
     text-align: center;
     line-height: 1.5;
-    flex: 1 1 100%;
+    width: 100%;
+    float: left;
 }
 .adsr_display {
-
+    margin-right: 5px;
+    float: left;
 }
 .defaultSize {
     width: 300px;
     height: 200px;
 }
 .trigger {
-    margin: 20px;
+    margin: 7px;
     background-color: white;
     width: 50px;
     height: 50px;
-    float: left;
     border: 2px solid lightseagreen;
+    float: left;
 }
 .trigger.hit {
     background-color: yellow;
-
 }
 .selector{
     background-color: white;
     list-style: none;
     width: 200px;
+    height: 28px;
 }

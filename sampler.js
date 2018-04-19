@@ -1,31 +1,14 @@
 var audioContext = audioContext ? audioContext : new AudioContext();
 var lastSample;
 
-/*
-problem : making sure that new components get added to setup properly so that function binding can occur...
 
-perhaps we need an MutationOberver to see new components...
- or better if we call a "universal" function that handles new devices being added:
-
-when component added
-  check all other component instances
-  if ambiguous addition... 
-    alert and force user to make connection/insertion...
-  else add to current components...
-
-  requirements... 
-  every component must be able to rebind on request.
-  every component should have audioContext in and out...
-
-*/
 const setupMediaStreamRecorder = targetAudioElement => {
 
   navigator.mediaDevices
     .getUserMedia({ audio: true })
     .then(stream => {
       recorder = new MediaRecorder(stream);
-      source = audioContext.createMediaStreamSource(stream);
-      
+      source = audioContext.createMediaStreamSource(stream);    
       recorder.ondataavailable = e => {
         audioChunks.push(e.data);
         if (recorder.state == "inactive") {
@@ -155,6 +138,7 @@ function makeSampler() {
   return sampler;
 }
 
+
 /* a helper function to work with a keyboard... it uses dataset.octave and dataset.id (a value 0-11 that represents 
     "C" to "B") to create a detune value (in cents).  A 'C' value is the default value of the original sample.
 */
@@ -162,11 +146,6 @@ const keyboardSamplerConversion = noteElement => {
   const note = noteElement.dataset.id;
   const octave = noteElement.dataset.octave;
   const cents = (octave - 4) * 1200 + note * 100; // assumes octave 4 is below pitch...
-
-  //console.log("playNote", octave, note);
-  //assume octave 4 with two octave range... middle C is original pitch...;
-  // so create a default range with keyboard splitting note range both above and below...
-
   return cents;
 };
 function voice(analyser, sample, adjustmentFunction) {

@@ -1,4 +1,4 @@
-.sequencer {
+.stepsContainer {
  /* position: relative;*/
   flex: 1 0;
   border-left: 10px solid black;
@@ -6,6 +6,7 @@
   border-bottom: 10px solid black;
   display: flex;
   flex-flow: row nowrap;
+  height: 80px;
  /* box-shadow: 1px 1px black;*/
 }
 

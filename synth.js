@@ -1,15 +1,29 @@
 var audioContext = audioContext ? audioContext : new AudioContext();
 
+const synthSettings={
+  volume: {default: .5 ,min: 0, max: 1, step:.01},
+  portamento: {default: .5, min: 0, max: 1, step:.01}
+}
+
+
+
 const synthInterface =(obj)=> {
   const waveform=makeSelector("waveform", "sine", "triangle", "sawtooth", "square");
-  const masterGroup=faderGroup("master","portamento");
-  const wrapper=wrapChildren(waveform,masterGroup);
-  interface=draggableComponentWrapper(wrapper, obj.instance)
-  setOwner(waveform, obj.component, obj.instance);
-  setOwner(masterGroup, obj.component, obj.instance);
+  const masterGroup=faderGroup("volume","portamento");
+  const interface=wrapChildren(waveform,masterGroup);
+  groupLabel(interface,"voice")
+  interface.className="component";
+  interface.dataset.component=obj.component;
+  interface.dataset.instance=obj.instance;
+
+  setFaderGroup(masterGroup, synthSettings)
   document.body.appendChild(interface);
+
   return {
-  masterGroup
+    interface: { interface},
+    menu(){ componentMenu.apply(this);},
+    show(){show.apply(this)},
+    hide(){hide.apply(this)}
   }
 };
 const masterVoice_listeners =(obj)=> ({
@@ -17,133 +31,55 @@ const masterVoice_listeners =(obj)=> ({
       obj.osc.type = e;
     },
     portamento(e) {
-      obj.portamentoTime(e);
+      obj.portamentoTime=e;
+    },
+    volume(e){
+      obj.masterVolume.gain.setValueAtTime(e,audioContext.currentTime)
     }
 });
 
-
-const makeGainInterface=(obj)=>{
-    const fader=simpleFader("gain");
-    const wrapper=draggableComponentWrapper(fader, obj.instance);
-    wrapper.append(fader)
-    fader.dataset.property="gain";
-    fader.dataset.instance=obj.instance;
-    fader.dataset.component=obj.component;
-    fader.className="controlGroup";
-    document.body.appendChild(wrapper);
-    obj.interface=wrapper;
-};
-
-const makeGain=({input, instance="gain", output=audioContext.destination }={})=>{
-    const gainNode= audioContext.createGain();
-   /* if (input){
-        input.connect(gainNode);
-    }*/
-    gainNode.connect(output);
-    const gainComponent={
-        gainNode,
-        instance,
-        component:"gain",
-    }
-    gainComponent.interface = makeGainInterface(gainComponent);
-}
 const makeMasterVoice = (instance = "voice") => {
-const masterVoice={
-    instance: defaultInstance(instance),
-    component: "voice",
-    portamentoTime: 0.01,
-    volume(){},
-    osc: audioContext.createOscillator(),
-    vca: makeADSR({ interface: true}),
-    pitchEnvelope : makeADSR({interface: true }),
-    lfo: makeLFO({instance: "vibrato", interface: true}),
-    lfo2: makeLFO({instance: "tremolo", interface: true}),
-    note(frequency) {
-      this.osc.frequency.cancelScheduledValues(audioContext.currentTime);
-      this.osc.frequency.setTargetAtTime(
-        Number(frequency),
-        audioContext.currentTime,
-        this.portamentoTime
-      );
-      this.vca.trigger();
-    },
-    trigger() {
-      this.vca.trigger();
-    },
-    release() {
-      this.vca.triggerRelease();
-    }
-}
+  const masterVoice={
+      instance: defaultInstance(instance),
+      component: "voice",
+      portamentoTime: 0.01,
+      osc: audioContext.createOscillator(),
+      vca: makeADSR({ interface: true, name:"vca"}),
+      vco : makeADSR({interface: true, name:"vco" }),
+      lfo: makeLFO({name: "tremolo", interface: true}),
+     // lfo2: makeLFO({name: "tremolo", interface: true}),
+      masterVolume: audioContext.createGain(),
+      note(frequency) {
+        this.osc.frequency.cancelScheduledValues(audioContext.currentTime);
+        this.osc.frequency.setTargetAtTime(
+          Number(frequency),
+          audioContext.currentTime,
+          this.portamentoTime
+        );
+        this.vca.trigger();
+      },
+      trigger() {
+        this.vca.trigger();
+      },
+      release() {
+        this.vca.triggerRelease();
+      }
+  }
 
       registerComponent(masterVoice);
-      let listeners=masterVoice_listeners(masterVoice);
-      Object.assign(masterVoice, listeners);
-
-      synthInterface(masterVoice);
-
-      masterVoice.lfo.init();
-      masterVoice.lfo2.init();
-
-
-      masterVoice.lfo.gain.connect(masterVoice.osc.frequency);
-      //masterVoice.lfo2.gain.connect(masterVoice.vca.gain);
-      masterVoice.vca.init();
-      //this.pitchEnvelope.init();
-      masterVoice.osc.connect(masterVoice.vca.gain);
-      masterVoice.vca.gain.connect(audioContext.destination);
+      Object.assign(masterVoice, masterVoice_listeners(masterVoice));
+      Object.assign(masterVoice, synthInterface(masterVoice));
+    //  masterVoice.lfo.gain.connect(masterVoice.osc.frequency);      
       masterVoice.osc.start();
-  
+      masterVoice.osc.connect(masterVoice.vca.gain);
+    //  masterVoice.vca.gain.connect(masterVoice.masterVolume);
+      masterVoice.vca.gain.connect(masterVoice.lfo.out);
+      masterVoice.lfo.out.connect(masterVoice.masterVolume);
+      masterVoice.masterVolume.connect(audioContext.destination);
       console.log("voice initialized!", masterVoice);
-    }
-/*
-const makeMasterVoice = (instance = "voice") => ({
+      return masterVoice;
+}
 
-  instance: defaultInstance(instance),
-  component: "voice",
-  portamentoTime: 0.01,
-  osc: audioContext.createOscillator(),
-  vca: makeADSR({ interface: true}),
-  pitchEnvelope : makeADSR({interface: true }),
-  lfo: makeLFO({instance: "vibrato", interface: true}),
-  lfo2: makeLFO({instance: "tremolo", interface: true}),
-
-  note(frequency) {
-    this.osc.frequency.cancelScheduledValues(audioContext.currentTime);
-    this.osc.frequency.setTargetAtTime(
-      Number(frequency),
-      audioContext.currentTime,
-      this.portamentoTime
-    );
-    this.vca.trigger();
-  },
-  trigger() {
-    this.vca.trigger();
-  },
-  release() {
-    this.vca.triggerRelease();
-  },
-  init() {
-      //  setOwner(this.wave, this.component, this.instance);
-    registerComponent(this);
-    let listeners=masterVoice_listeners(this);
-    Object.assign(this, listeners)
-    // this.interface=makeSynthInterface( this.component, this.instance);
-    synthInterface(this);
-    this.lfo.init();
-    this.lfo2.init();
-    //  console.log("adsr",this.adsr);
-    this.lfo.gain.connect(this.osc.frequency);
-    this.lfo2.gain.connect(this.vca.gain);
-    //this.vca.init();
-    //this.pitchEnvelope.init();
-    this.osc.connect(this.vca.gain);
-    this.vca.gain.connect(audioContext.destination);
-    this.osc.start();
-
-    console.log("voice initialized!", this);
-  }
-});
-/*
 const voiceFactory = count => {
   const voices = [];
   for (let i = 0; i < count; i++) {
@@ -156,24 +92,18 @@ const voiceFactory = count => {
 function doIt(array, callback) {
   array.forEach(element => callback(element));
 }
-*/
-function wrapChildren(...args) {
-  const wrapper = createElement("div");
-  args.forEach(component => wrapper.appendChild(component));
-  return wrapper;
-}
 
-Module.makeKeyboard(5);
-
+const keyboard=Module.makeKeyboard(5);
 const voice = makeMasterVoice();
-voice.init();
+const scope = makeScope({audioNode: voice.masterVolume, interface:true});
+console.log(voice)
 
-const scope = makeScope(Environment.voice.voice0.vca.gain);
-scope.init();
+
 
 function playNote(frequency) {
   console.log("playNote", frequency);
   Environment.voice.voice0.note(frequency);
+
 }
 
 function releaseNote(frequency) {

@@ -18,14 +18,16 @@ const eventListeners = {
       selectWholeKey(event.target.dataset.midinote).forEach(
         part => (part.className += " pressed")
       );
-      playNote(event.target.dataset.frequency);
+      playNote(event.target);
     }
   },
   keyReleased(event) {
     selectWholeKey(event.target.dataset.midinote).forEach(part =>
       part.classList.remove("pressed")
     );
-    releaseNote();
+  //  if (releaseNote!=='undefined'){
+    //  releaseNote(event.target);
+//    }
   },
 }
 const samplerPatchWindow={
@@ -162,10 +164,8 @@ makeUpperC(){
   topKey.classList.add("bottom");
   return topKey;
 },
-makeInterface(octaves, octaveStart, instance){
+makeInterface(octaves, octaveStart){
   const keyboard = createElement("div", { className: "keyboard" });
-      // add the top bar, draggable wrapper.
-  const wrapper = draggableComponentWrapper(keyboard, instance);
     // make size and range calculations
   this.calculateRange(octaves, octaveStart);
     // add octaves...
@@ -179,22 +179,22 @@ makeInterface(octaves, octaveStart, instance){
     // add the patch window
     //makePatchWindow(keyboard);
 
-  document.body.appendChild(wrapper);
+  document.body.appendChild(keyboard);
     // add computerkeyboard listener.
     addTypeListener(keyboard);
     return keyboard;
 },
 
-makeKeyboard(octaves = 2, octaveStart, instance=defaultInstance("keyboard")){
-  const keyboard = {
-    instance,
-    component : "keyboard",
-    keyboard : this.makeInterface(octaves, octaveStart, instance),
-  }
-  registerComponent(keyboard);
-  return keyboard;
+makeKeyboard(octaves = 2, octaveStart){
+  const keyboard = makeAudioComponent(component="keyboard" );
+  console.log(keyboard)
+  keyboard.interface = Module.makeInterface(octaves, octaveStart);
+  const wrapper=draggableComponentWrapper(keyboard.interface, keyboard);
+  document.body.appendChild(wrapper);
+  return wrapper;
 }
-}
+
+};
 
 function addTypeListener(element, octave = 4) {
   var keys = "awsedftgyhujkol";
@@ -237,3 +237,4 @@ function addTypeListener(element, octave = 4) {
     false
   );
 }
+
